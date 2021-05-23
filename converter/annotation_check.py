@@ -24,7 +24,7 @@ def annotation_check(input_path, save_path, annotation_list):
     except_id = []
     except_id = []
 
-    patient_id = [case for case in os.listdir(input_path)]
+    patient_id = os.listdir(input_path)
 
     for ID in tqdm(patient_id):
         print(ID)
@@ -64,15 +64,12 @@ def annotation_check(input_path, save_path, annotation_list):
                 if index_list[i] != 1:
                     lack_list.append(annotation_list[i])
             print('%s without annotations:'%ID,lack_list)
-            # print(lack_list)
+           
         # info_item.sort()
         info.append(info_item)
 
     info_csv = pd.DataFrame(data=info)
-    if os.path.exists(save_path):
-        info_csv.to_csv(save_path, index=False, header=None)
-    else:
-        info_csv.to_csv(save_path, index=False)
+    info_csv.to_csv(save_path, index=False, header=None)
 
     print(except_id)
     print(len(except_id))

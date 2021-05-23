@@ -22,10 +22,10 @@ def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resampl
         shutil.rmtree(save_path)
         os.makedirs(save_path)
 
-    path_list = list(set([case.split('_')[0] for case in os.listdir(input_path)]))
+    path_list = os.listdir(input_path)
     start = time.time()
     for ID in tqdm(path_list):
-        print('***** %s in Processing *****'%ID)
+        print('=============%s in Processing============='%ID)
         tmp_images = []
         tmp_labels = []
         data_path = os.path.join(input_path,ID)
@@ -33,7 +33,7 @@ def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resampl
             sub_path = os.path.join(data_path,sub)
             if os.path.exists(sub_path):
                 series_path = glob.glob(os.path.join(sub_path, '*' + ID + '*CT*'))[0]
-                rt_path = glob.glob(os.path.join(input_path, '*' + ID + '*RT*'))[0]
+                rt_path = glob.glob(os.path.join(sub_path, '*' + ID + '*RT*'))[0]
                 rt_path = glob.glob(os.path.join(rt_path, '*.dcm'))[0]
                 
                 try:
@@ -53,6 +53,7 @@ def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resampl
         images = np.concatenate(tmp_images,axis=0).astype(np.int16)
         labels = np.concatenate(tmp_labels,axis=0).astype(np.uint8)
         hdf5_path = os.path.join(save_path, ID + '.hdf5')
+        print("=================%s done!================="%ID)
 
         save_as_hdf5(images, hdf5_path, 'image')
         save_as_hdf5(labels, hdf5_path, 'label')

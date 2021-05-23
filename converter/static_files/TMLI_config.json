@@ -17,7 +17,7 @@
     ],
     "target_format":{
         "size":[512,512],
-        "thickness":2.5,
+        "thickness":5.0,
         "WL":600,
         "WW":1600,
         "scale":[-200,1400],
@@ -33,7 +33,7 @@
     },
     "3d_data":{
         "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/3d_data",
-        "crop":0,
+        "crop":48,
         "shape":[128,256,256]
     },
     "scale":{

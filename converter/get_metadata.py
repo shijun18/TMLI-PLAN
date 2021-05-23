@@ -26,7 +26,7 @@ def metadata_reader(data_path):
 # CT and RT in different folders
 def get_metadata(input_path, save_path):
 
-    id_list = [case for case in os.listdir(input_path)]
+    id_list = os.listdir(input_path)
     info = []
     for ID in tqdm(id_list):
         info_item = [ID]
@@ -36,14 +36,11 @@ def get_metadata(input_path, save_path):
             if os.path.exists(sub_path):
                 series_path = glob.glob(os.path.join(sub_path, '*' + ID + '*CT*'))[0]
                 info_item.extend(metadata_reader(series_path))
-                info.append(info_item)
-    col = ['id', 'size', 'num', 'thickness', 'pixel_spacing']*2
+        info.append(info_item)
+    col = ['id'] + ['size', 'num', 'thickness', 'pixel_spacing']*2
 
     info_data = pd.DataFrame(columns=col,data=info)
-    if os.path.exists(save_path):
-        info_data.to_csv(save_path, index=False, header=None)
-    else:
-        info_data.to_csv(save_path, index=False)
+    info_data.to_csv(save_path, index=False, header=None)
 
 
 if __name__ == "__main__":

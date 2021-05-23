@@ -66,36 +66,14 @@ def area_compute(input_path,save_path,label_list):
 
 
 if __name__ == "__main__":
-    # cervical_oar
-    # json_file = './dcm_converter/static_files/Cervical_Oar.json'
-    # nasopharynx
-    # json_file = './dcm_converter/static_files/Nasopharynx_Oar.json'
-    # structseg_han
-    # json_file = './nii_converter/static_files/Structseg_HaN.json'
-    # structseg_thor
-    # json_file = './nii_converter/static_files/Structseg_THOR.json'
-    # segthor
-    # json_file = './nii_converter/static_files/SegTHOR.json'
-    # covid-seg
-    # json_file = './nii_converter/static_files/Covid-Seg.json'
-    # lung
-    # json_file = './dcm_converter/static_files/Lung_Oar.json'
-    # lung tumor
-    # json_file = './dcm_converter/static_files/Lung_Tumor.json'
-    # egfr
-    json_file = './dcm_converter/static_files/EGFR.json'
-    # LIDC
-    # json_file = './dcm_converter/static_files/LIDC.json'
+    json_file = './static_files/TMLI_config.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
         input_path = info['2d_data']['save_path']
-        # save_path = info['2d_data']['csv_path']
-        area_path = info['2d_data']['area_path']
+        save_path = info['2d_data']['csv_path']
         
         # for test data
         # input_path = info['2d_data']['test_path']
         # save_path = info['2d_data']['test_csv_path']
         
-    
-    # csv_maker(input_path,save_path,info['annotation_list'])
-    area_compute(input_path,area_path,info['annotation_list'])
+    csv_maker(input_path,save_path,info['annotation_list'])

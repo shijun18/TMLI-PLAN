@@ -73,27 +73,7 @@ def prepare_data(input_path, save_path, data_shape, crop=0, mode='2d'):
     print("run time: %.3f" % (time.time() - start))
 
 if __name__ == "__main__":
-    # keep 10 samples as final test set
-    # cervical_oar
-    # json_file = './dcm_converter/static_files/Cervical_Oar.json'
-    # nasopharynx
-    # json_file = './dcm_converter/static_files/Nasopharynx_Oar.json'
-    # structseg_han
-    # json_file = './nii_converter/static_files/Structseg_HaN.json'
-    # structseg_thor
-    # json_file = './nii_converter/static_files/Structseg_THOR.json'
-    # segthor
-    # json_file = './nii_converter/static_files/SegTHOR.json'
-    # covid-seg
-    # json_file = './nii_converter/static_files/Covid-Seg.json'
-    # lung
-    # json_file = './dcm_converter/static_files/Lung_Oar.json'
-    # lung tumor
-    # json_file = './dcm_converter/static_files/Lung_Tumor.json'
-    # egfr
-    # json_file = './dcm_converter/static_files/EGFR.json'
-    # LIDC
-    json_file = './dcm_converter/static_files/LIDC.json'
+    json_file = './static_files/TMLI_config.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
         input_path = info['npy_path']

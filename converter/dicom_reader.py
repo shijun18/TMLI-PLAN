@@ -162,17 +162,17 @@ class Dicom_Reader(object):
         # assert len(contours) == len(annotation_list)
         
         for annotation in annotation_list:
-            print('***** %s in Extracting ***** '%annotation)
-            count = 0
             try:
                 con = contours[annotation]
             except:
-                print('lack:',annotation)
+                # print('lack:',annotation)
                 continue
+            # print('***** %s in Extracting ***** '%annotation)
+            count = 0
             ROI_NUMBER = annotation_list.index(annotation) + 1
 
             if 'coord_point' not in con or len(con['coord_point']) == 0:
-                raise ValueError('There is no point!')
+                print('There is no point!')
             for item in con['coord_point']:
                 points = np.array(item).reshape((-1, 3))
                 try:
@@ -190,7 +190,10 @@ class Dicom_Reader(object):
                 c = points[:, 0]
                 rr, cc = polygon(r, c)
                 labels[z_index, rr, cc] = ROI_NUMBER
-            print('lack %d slices in this annotaion'%count)
+            if count != 0:
+                print('lack %d slices in %s'%(count,annotation))
+            else:
+                print('%s is done!'%(annotation))
         return labels
 
 
