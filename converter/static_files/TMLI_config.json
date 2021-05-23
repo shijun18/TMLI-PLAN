@@ -18,9 +18,9 @@
     "target_format":{
         "size":[512,512],
         "thickness":5.0,
-        "WL":600,
-        "WW":1600,
-        "scale":[-200,1400],
+        "WL":200,
+        "WW":800,
+        "scale":[-200,600],
         "pixel_spacing":1.0
     },
     "2d_data":{
@@ -44,8 +44,8 @@
         "Shoulder_extremities_x":[-200,1400],
         "Stemum_x":[-200,1400],
         "Pelvis_x":[-200,1400],
-        "LN_x":[-200,1400],
+        "LN_x":[-200,600],
         "Extremities_x":[-200,1400],
-        "All":[-200,1400]
+        "All":[-200,600]
     }
 }
