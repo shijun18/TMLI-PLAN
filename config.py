@@ -15,9 +15,10 @@ __mode__ = ['cls','seg','mtl']
 
 json_path = {
     'TMLI':'/staff/shijun/torch_projects/TMLI/converter/static_files/TMLI_config.json',
+    'TMLI_UP':'/staff/shijun/torch_projects/TMLI/converter/static_files/TMLI_config_up.json',
 }
     
-DISEASE = 'TMLI' 
+DISEASE = 'TMLI_UP' 
 MODE = 'seg'
 NET_NAME = 'unet'
 ENCODER_NAME = 'resnet18'
@@ -26,7 +27,7 @@ VERSION = 'v1.1-all'
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '1'
+DEVICE = '3'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -34,14 +35,14 @@ PRE_TRAINED = False
 EX_PRE_TRAINED = False
 # True if use resume model
 CKPT_POINT = False
-# 1,2,...,8
+# [1-N]
 CURRENT_FOLD = 1
 GPU_NUM = len(DEVICE.split(','))
 FOLD_NUM = 5
 
 # Arguments for trainer initialization
 #--------------------------------- single or multiple
-ROI_NUMBER = None# or [1-N]
+ROI_NUMBER = 7# or [1-N]
 NUM_CLASSES = info['annotation_num'] + 1  # 2 for binary, more for multiple classes
 if ROI_NUMBER is not None:
     NUM_CLASSES = 2

@@ -66,7 +66,8 @@ def area_compute(input_path,save_path,label_list):
 
 
 if __name__ == "__main__":
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_up.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
         input_path = info['2d_data']['save_path']

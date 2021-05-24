@@ -31,7 +31,8 @@ def get_metadata(input_path, save_path):
     for ID in tqdm(id_list):
         info_item = [ID]
         data_path = os.path.join(input_path,ID)
-        for sub in ['up','down']:
+        sub_dir = ['up','down']
+        for sub in sub_dir:
             sub_path = os.path.join(data_path,sub)
             if os.path.exists(sub_path):
                 series_path = glob.glob(os.path.join(sub_path, '*' + ID + '*CT*'))[0]

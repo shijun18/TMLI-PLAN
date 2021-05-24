@@ -1,9 +1,9 @@
 {
     "dicom_path":"/staff/shijun/dataset/TMLI/raw_data",
-    "npy_path":"/staff/shijun/dataset/Med_Seg/TMLI/npy_data",
+    "npy_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_npy_data",
     "metadata_path":"/staff/shijun/torch_projects/TMLI/converter/meta_data/tmli_metadata.csv",
     "annotation_path":"/staff/shijun/torch_projects/TMLI/converter/meta_data/tmli_annotation.csv",
-    "annotation_num":8,
+    "annotation_num":7,
     "annotation_list":[
         "Skull_x", 
         "Bone_x", 
@@ -11,8 +11,7 @@
         "Shoulder_extremities_x", 
         "Stemum_x", 
         "Pelvis_x", 
-        "LN_x",
-        "Extremities_x"
+        "LN_x"
     ],
     "target_format":{
         "size":[512,512],
@@ -23,12 +22,12 @@
         "pixel_spacing":1.0
     },
     "2d_data":{
-        "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/2d_data",
-        "test_path":"/staff/shijun/dataset/Med_Seg/TMLI/2d_test_data",
+        "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_2d_data",
+        "test_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data",
         "crop":0,
         "shape":[512,512],
-        "csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/tmli.csv",
-        "test_csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/tmli_test.csv"
+        "csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/up_tmli.csv",
+        "test_csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/up_tmli_test.csv"
     },
     "3d_data":{
         "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/3d_data",
@@ -43,7 +42,6 @@
         "Stemum_x":[-200,1400],
         "Pelvis_x":[-200,1400],
         "LN_x":[-200,600],
-        "Extremities_x":[-200,1400],
         "All":[-200,600]
     }
 }

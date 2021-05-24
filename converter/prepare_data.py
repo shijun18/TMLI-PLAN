@@ -73,7 +73,8 @@ def prepare_data(input_path, save_path, data_shape, crop=0, mode='2d'):
     print("run time: %.3f" % (time.time() - start))
 
 if __name__ == "__main__":
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_up.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
         input_path = info['npy_path']

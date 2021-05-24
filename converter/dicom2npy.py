@@ -13,8 +13,9 @@ import numpy as np
 from converter.dicom_reader import Dicom_Reader
 from converter.utils import save_as_hdf5
 
+
 # dicom series and rt in different directories.
-def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resample=True):
+def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, sub_dir=['down','up'], resample=True):
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -29,7 +30,7 @@ def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resampl
         tmp_images = []
         tmp_labels = []
         data_path = os.path.join(input_path,ID)
-        for sub in ['up','down']:
+        for sub in sub_dir:
             sub_path = os.path.join(data_path,sub)
             if os.path.exists(sub_path):
                 series_path = glob.glob(os.path.join(sub_path, '*' + ID + '*CT*'))[0]
@@ -63,8 +64,11 @@ def dicom_to_hdf5(input_path, save_path, annotation_list, target_format, resampl
 
 
 if __name__ == "__main__":
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_up.json'
 
     with open(json_file, 'r') as fp:
         info = json.load(fp)
-    dicom_to_hdf5(info['dicom_path'], info['npy_path'], info['annotation_list'], info['target_format'],resample=False)
+    # dicom_to_hdf5(info['dicom_path'], info['npy_path'], info['annotation_list'], info['target_format'],sub_dir = ['down','up'],resample=False)
+    dicom_to_hdf5(info['dicom_path'], info['npy_path'], info['annotation_list'], info['target_format'],sub_dir = ['up'],resample=False)
+    

@@ -38,7 +38,8 @@ def data_check(input_path,annotation_list):
 
 if __name__ == "__main__":
 
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_up.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
     data_check(info['npy_path'],info['annotation_list'])
