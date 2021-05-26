@@ -5,7 +5,7 @@ import glob
 from utils import get_path_with_annotation,get_path_with_annotation_ratio
 from utils import get_weight_path
 
-__disease__ = ['Covid-Seg','Lung_Tumor']
+__disease__ = ['TMLI','TMLI_UP']
 __net__ = ['unet','unet++','FPN','deeplabv3+','swin_trans_unet']
 __encoder_name__ = [None,'resnet18','resne34','resnet50','se_resnet50','resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
                     'efficientnet-b4', 'efficientnet-b5','efficientnet-b6','efficientnet-b7']
@@ -20,14 +20,14 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'unet'
+NET_NAME = 'deeplabv3+'
 ENCODER_NAME = 'resnet18'
-VERSION = 'v1.1-all'
+VERSION = 'v4.1-all'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '3'
+DEVICE = '0'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -42,7 +42,7 @@ FOLD_NUM = 5
 
 # Arguments for trainer initialization
 #--------------------------------- single or multiple
-ROI_NUMBER = 7# or [1-N]
+ROI_NUMBER = None# or [1-N]
 NUM_CLASSES = info['annotation_num'] + 1  # 2 for binary, more for multiple classes
 if ROI_NUMBER is not None:
     NUM_CLASSES = 2
@@ -66,7 +66,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['save_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (512,512)
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
