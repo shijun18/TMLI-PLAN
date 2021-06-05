@@ -232,7 +232,7 @@ class SemanticSeg(object):
             val_loss, val_dice, val_acc = self._val_on_epoch(epoch, net, loss, val_path)
 
             if lr_scheduler is not None:
-                lr_scheduler.step(val_loss)
+                lr_scheduler.step()
 
             torch.cuda.empty_cache()
             print('epoch:{},train_loss:{:.5f},val_loss:{:.5f}'.format(epoch, train_loss, val_loss))

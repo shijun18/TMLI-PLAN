@@ -20,14 +20,14 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'deeplabv3+'
+NET_NAME = 'unet++'
 ENCODER_NAME = 'resnet18'
-VERSION = 'v4.1-all'
+VERSION = 'v2.1-all'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '0'
+DEVICE = '1'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
