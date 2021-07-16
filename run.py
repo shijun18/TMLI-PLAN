@@ -75,25 +75,6 @@ def get_cross_validation_by_sample(path_list, fold_num, current_fold):
           "\nVal set length:", len(validation_path))
     return train_path, validation_path
 
-def get_cross_validation(path_list, fold_num, current_fold):
-
-    _len_ = len(path_list) // fold_num
-    train_id = []
-    validation_id = []
-    end_index = current_fold * _len_
-    start_index = end_index - _len_
-    if current_fold == fold_num:
-        validation_id.extend(path_list[start_index:])
-        train_id.extend(path_list[:start_index])
-    else:
-        validation_id.extend(path_list[start_index:end_index])
-        train_id.extend(path_list[:start_index])
-        train_id.extend(path_list[end_index:])
-    random.shuffle(train_id)
-    random.shuffle(validation_id)
-    print(len(train_id), len(validation_id))
-    return train_id, validation_id
-
 
 def get_parameter_number(net):
     total_num = sum(p.numel() for p in net.parameters())
@@ -106,8 +87,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-m',
                         '--mode',
-                        default='train_cross_val',
-                        choices=["train", 'train_cross_val', "inf","test"],
+                        default='train-cross',
+                        choices=["train", 'train-cross', "inf","test"],
                         help='choose the mode',
                         type=str)
     parser.add_argument('-s', '--save', default='no', choices=['no', 'n', 'yes', 'y'],
@@ -115,13 +96,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set data path & segnetwork
-    if args.mode != 'train_cross_val':
+    if args.mode != 'train-cross':
         segnetwork = SemanticSeg(**INIT_TRAINER)
         print(get_parameter_number(segnetwork.net))
     path_list = PATH_LIST
     # Training
     ###############################################
-    if args.mode == 'train_cross_val':
+    if args.mode == 'train-cross':
         for current_fold in range(1, FOLD_NUM + 1):
             print("=== Training Fold ", current_fold, " ===")
             segnetwork = SemanticSeg(**INIT_TRAINER)

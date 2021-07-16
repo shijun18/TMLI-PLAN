@@ -142,7 +142,7 @@ class RunningDice():
 
         intersection_over_union = (2*intersection + smooth ) / (union.astype(np.float32) + smooth)
         dice_list = [round(case,4) for case in intersection_over_union]
-        mean_intersection_over_union = np.mean(intersection_over_union)
+        mean_intersection_over_union = np.mean(intersection_over_union[1:])
         
         return mean_intersection_over_union, dice_list
     

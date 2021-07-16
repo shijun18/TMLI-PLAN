@@ -92,6 +92,7 @@ class SemanticSeg(object):
         self.start_epoch = 0
         self.global_step = 0
         self.loss_threshold = 2.0
+        self.metrics_threshold = 0.0
 
         self.weight_decay = weight_decay
         self.momentum = momentum
@@ -225,19 +226,19 @@ class SemanticSeg(object):
 
         # loss_threshold = 1.0
 
-        early_stopping = EarlyStopping(patience=20,verbose=True,monitor='val_loss',op_type='min')
+        early_stopping = EarlyStopping(patience=20,verbose=True,monitor='val_run_dice',op_type='max')
         for epoch in range(self.start_epoch, self.n_epoch):
-            train_loss, train_dice, train_acc = self._train_on_epoch(epoch, net, loss, optimizer, train_loader, scaler)
+            train_loss, train_dice, train_acc, train_run_dice = self._train_on_epoch(epoch, net, loss, optimizer, train_loader, scaler)
 
-            val_loss, val_dice, val_acc = self._val_on_epoch(epoch, net, loss, val_path)
+            val_loss, val_dice, val_acc, val_run_dice = self._val_on_epoch(epoch, net, loss, val_path)
 
             if lr_scheduler is not None:
                 lr_scheduler.step()
 
             torch.cuda.empty_cache()
             print('epoch:{},train_loss:{:.5f},val_loss:{:.5f}'.format(epoch, train_loss, val_loss))
-
-            print('epoch:{},train_dice:{:.5f},val_dice:{:.5f}'.format(epoch, train_dice, val_dice))
+            print('epoch:{},train_dice:{:.5f},train_run_dice:{:.5f},val_dice:{:.5f},val_run_dice:{:.5f}'
+              .format(epoch,train_dice,train_run_dice,val_dice,val_run_dice))
 
             self.writer.add_scalars('data/loss', {
                 'train': train_loss,
@@ -247,17 +248,23 @@ class SemanticSeg(object):
                 'train': train_dice,
                 'val': val_dice
             }, epoch)
+            self.writer.add_scalars('data/run_dice', {
+                'train': train_run_dice,
+                'val': val_run_dice
+            }, epoch)
             self.writer.add_scalars('data/acc', {
                 'train': train_acc,
                 'val': val_acc
             }, epoch)
             self.writer.add_scalar('data/lr', optimizer.param_groups[0]['lr'],epoch)
             
-            early_stopping(val_loss)
+            early_stopping(val_run_dice)
             #save
-            if val_loss <= self.loss_threshold:
-                self.loss_threshold = val_loss
-        
+            # if val_loss <= self.loss_threshold:
+            #     self.loss_threshold = val_loss
+            if val_run_dice > self.metrics_threshold:
+                self.metrics_threshold = val_run_dice
+
                 if len(self.device.split(',')) > 1:
                     state_dict = net.module.state_dict()
                 else:
@@ -270,12 +277,11 @@ class SemanticSeg(object):
                     'optimizer': optimizer.state_dict()
                 }
 
-                file_name = 'epoch:{}-train_loss:{:.5f}-train_dice:{:.5f}-train_acc:{:.5f}-val_loss:{:.5f}-val_dice:{:.5f}-val_acc:{:.5f}.pth'.format(
-                    epoch, train_loss, train_dice, train_acc, val_loss,
-                    val_dice, val_acc)
+                file_name = 'epoch:{}-train_loss:{:.5f}-train_dice:{:.5f}-train_run_dice:{:.5f}-train_acc:{:.5f}-val_loss:{:.5f}-val_dice:{:.5f}-val_run_dice:{:.5f}-val_acc:{:.5f}.pth'.format(
+                    epoch, train_loss, train_dice, train_run_dice,train_acc, val_loss,val_dice,val_run_dice,val_acc)
                 
                 save_path = os.path.join(output_dir, file_name)
-                print("Save as %s" % file_name)
+                print("Save as: %s" % file_name)
 
                 torch.save(saver, save_path)
             
@@ -355,7 +361,7 @@ class SemanticSeg(object):
                     rundice, dice_list = run_dice.compute_dice() 
                     print("Category Dice: ", dice_list)
                     print('epoch:{},step:{},train_loss:{:.5f},train_dice:{:.5f},run_dice:{:.5f},lr:{}'.format(epoch, step, loss.item(), dice.item(), rundice, optimizer.param_groups[0]['lr']))
-                    run_dice.init_op()
+                    # run_dice.init_op()
                 else:
                     print('epoch:{},step:{},train_loss:{:.5f},train_dice:{:.5f},train_acc:{:.5f},lr:{}'.format(epoch, step, loss.item(), dice.item(),acc.item(), optimizer.param_groups[0]['lr']))
 
@@ -368,7 +374,7 @@ class SemanticSeg(object):
 
             self.global_step += 1
 
-        return train_loss.avg, train_dice.avg, train_acc.avg
+        return train_loss.avg, train_dice.avg, train_acc.avg, run_dice.compute_dice()[0]
 
     def _val_on_epoch(self, epoch, net, criterion, val_path, val_transformer=None):
 
@@ -458,11 +464,11 @@ class SemanticSeg(object):
                         rundice, dice_list = run_dice.compute_dice() 
                         print("Category Dice: ", dice_list)
                         print('epoch:{},step:{},val_loss:{:.5f},val_dice:{:.5f},rundice:{:.5f}'.format(epoch, step, loss.item(), dice.item(),rundice))
-                        run_dice.init_op()
+                        # run_dice.init_op()
                     else:
                         print('epoch:{},step:{},val_loss:{:.5f},val_dice:{:.5f},val_acc:{:.5f}'.format(epoch, step, loss.item(), dice.item(), acc.item()))
 
-        return val_loss.avg, val_dice.avg, val_acc.avg
+        return val_loss.avg, val_dice.avg, val_acc.avg,run_dice.compute_dice()[0]
 
     def test(self, test_path, save_path, net=None, mode='seg', save_flag=False):
         if net is None:
@@ -777,61 +783,34 @@ class AverageMeter(object):
 
 
 
+
 def binary_dice(predict, target, smooth=1e-5):
-    """Dice of binary class
+    """Dice loss of binary class
     Args:
         smooth: A float number to smooth loss, and avoid NaN error, default: 1e-5
         predict: A tensor of shape [N, *]
         target: A tensor of shape same with predict
     Returns:
-        dice according to arg reduction
+        Loss tensor according to arg reduction
     Raise:
         Exception if unexpected reduction
     """
     assert predict.shape[0] == target.shape[0], "predict & target batch size don't match"
-    predict = predict.contiguous().view(predict.shape[0], -1)
-    target = target.contiguous().view(target.shape[0], -1)
+    predict = predict.contiguous().view(predict.shape[0], -1) #N，H*W
+    target = target.contiguous().view(target.shape[0], -1) #N，H*W
 
-    inter = torch.sum(torch.mul(predict, target), dim=1)
-    union = torch.sum(predict + target, dim=1)
+    inter = torch.sum(torch.mul(predict, target), dim=1) #N
+    union = torch.sum(predict + target, dim=1) #N
 
-    dice = (2 * inter + smooth) / (union + smooth)
+    dice = (2*inter + smooth) / (union + smooth ) #N
+    
+    # nan mean
+    dice_index = dice != 1.0
+    dice = dice[dice_index]
 
     return dice.mean()
 
-'''
-def compute_dice(predict, target, ignore_index=0, shift=0.5):
-    """
-    Compute dice
-    Args:
-        predict: A tensor of shape [N, C, *]
-        target: A tensor of same shape with predict
-        ignore_index: class index to ignore
-    Return:
-        mean dice over the batch
-    """
-    assert predict.shape == target.shape, 'predict & target shape do not match'
 
-    predict_shift = F.relu(predict-shift)
-    alpha = predict / (predict-shift)
-    alpha_relu = F.relu(alpha)
-    predict = predict_shift * alpha_relu
-
-    total_dice = 0.
-    dice_list = []
-    for i in range(target.shape[1]):
-        if i != ignore_index:
-            dice = binary_dice(predict[:, i], target[:, i])
-            # print(dice)
-            total_dice += dice
-            dice_list.append(round(dice.item(),4))
-    # print(dice_list)
-
-    if ignore_index is not None:
-        return total_dice / (target.shape[1] - 1)
-    else:
-        return total_dice / target.shape[1]
-'''
 def compute_dice(predict,target,ignore_index=0):
     """
     Compute dice
@@ -843,25 +822,22 @@ def compute_dice(predict,target,ignore_index=0):
         mean dice over the batch
     """
     assert predict.shape == target.shape, 'predict & target shape do not match'
-    total_dice = 0.
     # predict = F.softmax(predict, dim=1)
-
+    
     onehot_predict = torch.argmax(predict,dim=1)#N*H*W
     onehot_target = torch.argmax(target,dim=1) #N*H*W
 
-    dice_list = []
+    dice_list = -1.0 * np.ones((target.shape[1]),dtype=np.float32)
     for i in range(target.shape[1]):
         if i != ignore_index:
-            # dice = binary_dice(predict[:, i], target[:, i])
+            if i not in onehot_predict and i not in onehot_target:
+                continue
             dice = binary_dice((onehot_predict==i).float(), (onehot_target==i).float())
-            total_dice += dice
-            dice_list.append(round(dice.item(),4))
-    # print(dice_list)
+            dice_list[i] = round(dice.item(),4)
+    dice_list = np.where(dice_list == -1.0, np.nan, dice_list)
+    
+    return np.nanmean(dice_list[1:])
 
-    if ignore_index is not None:
-        return total_dice/(target.shape[1] - 1)
-    else:
-        return total_dice/target.shape[1]
 
 def accuracy(output, target):
     '''

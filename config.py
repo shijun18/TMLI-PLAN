@@ -20,14 +20,14 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'unet++'
+NET_NAME = 'deeplabv3+'
 ENCODER_NAME = 'resnet18'
-VERSION = 'v2.1-all'
+VERSION = 'v4.1'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '1'
+DEVICE = '3'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -94,7 +94,7 @@ INIT_TRAINER = {
   'weight_decay': 0.0001,
   'momentum': 0.99,
   'gamma': 0.1,
-  'milestones': [40,80],
+  'milestones': [30,60,90],
   'T_max':5,
   'mode':MODE,
   'topk':20,
@@ -103,8 +103,7 @@ INIT_TRAINER = {
  }
 #---------------------------------
 
-__seg_loss__ = ['DiceLoss','TverskyLoss','FocalTverskyLoss','TopkCEPlusDice','DynamicTopkCEPlusDice','TopkCEPlusTopkShiftDice','TopkCEPlusShiftDice','PowDiceLoss',\
-                'Cross_Entropy','TopkDiceLoss','DynamicTopKLoss','TopKLoss','CEPlusDice','TopkCEPlusDice','CEPlusTopkDice','TopkCEPlusTopkDice']
+__seg_loss__ = ['DiceLoss','TopKLoss','CEPlusDice','TopkCEPlusDice','DynamicTopkCEPlusDice','DynamicTopKLoss','TopkCEPlusShiftDice','CEPlusTopkDice','TopkCEPlusTopkDice','PowDiceLoss','Cross_Entropy','TopkDiceLoss']
 __cls_loss__ = ['BCEWithLogitsLoss']
 __mtl_loss__ = ['BCEPlusDice']
 # Arguments when perform the trainer 
@@ -112,7 +111,7 @@ __mtl_loss__ = ['BCEPlusDice']
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'TopkCEPlusDice'
+    LOSS_FUN = 'TopKLoss' if ROI_NUMBER is None else 'TopkCEPlusDice'
 else:
     LOSS_FUN = 'BCEPlusDice'
 
@@ -122,7 +121,7 @@ SETUP_TRAINER = {
   'optimizer':'Adam',
   'loss_fun':LOSS_FUN,
   'class_weight':None, #[1,4]
-  'lr_scheduler':'CosineAnnealingWarmRestarts', #'CosineAnnealingLR'
+  'lr_scheduler':'MultiStepLR', #'CosineAnnealingLR'
   }
 #---------------------------------
 TEST_PATH = None
