@@ -80,6 +80,6 @@ if __name__ == "__main__":
         input_path = info['npy_path']
         setting_2d = info['2d_data']
         setting_3d = info['3d_data']
-    prepare_data(input_path, setting_2d['save_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
+    prepare_data(input_path, setting_2d['train_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
     # prepare_data(input_path, setting_2d['test_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
-    # prepare_data(input_path, setting_3d['save_path'], tuple(setting_3d['shape']), setting_3d['crop'],mode='3d')
+    # prepare_data(input_path, setting_3d['train_path'], tuple(setting_3d['shape']), setting_3d['crop'],mode='3d')

@@ -1,3 +1,15 @@
+# -*- encoding: utf-8 -*-
+'''
+@File    :   run.py
+@Time    :   2021/11/29 17:20:54
+@Author  :   Jun Shi 
+@Version :   1.0
+@Contact :   shijun18@mail.ustc.edu.cn
+@License :   (C)Copyright 2019-2025, USTC-ACSA
+'''
+
+# here put the import lib
+
 import os
 import argparse
 from trainer import SemanticSeg

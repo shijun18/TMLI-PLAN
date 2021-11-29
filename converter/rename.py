@@ -23,5 +23,6 @@ def dfs_rename_dir(path):
 
 
 if __name__ == '__main__':
-    path = '/staff/shijun/dataset/TMLI/raw_data'
+    # path = '/staff/shijun/dataset/TMLI/raw_data'
+    path = '/staff/shijun/dataset/TMLI/zip_data/tmp_zip'
     dfs_rename_dir(path)

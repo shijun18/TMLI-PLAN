@@ -22,15 +22,15 @@
         "pixel_spacing":1.0
     },
     "2d_data":{
-        "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_2d_data",
+        "train_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_2d_data",
         "test_path":"/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data",
         "crop":0,
         "shape":[512,512],
-        "csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/up_tmli.csv",
+        "train_csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/up_tmli.csv",
         "test_csv_path":"/staff/shijun/torch_projects/TMLI/converter/static_files/up_tmli_test.csv"
     },
     "3d_data":{
-        "save_path":"/staff/shijun/dataset/Med_Seg/TMLI/3d_data",
+        "train_path":"/staff/shijun/dataset/Med_Seg/TMLI/3d_data",
         "crop":48,
         "shape":[128,256,256]
     },

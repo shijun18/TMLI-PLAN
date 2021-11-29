@@ -27,12 +27,12 @@ VERSION = 'v4.1'
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '3'
+DEVICE = '2'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
 # True if use external pre-trained model 
-EX_PRE_TRAINED = False
+EX_PRE_TRAINED = True if 'pretrain' in VERSION else False
 # True if use resume model
 CKPT_POINT = False
 # [1-N]
@@ -54,13 +54,13 @@ SCALE = info['scale'][ROI_NAME]
 
 #--------------------------------- mode and data path setting
 #all
-PATH_LIST = glob.glob(os.path.join(info['2d_data']['save_path'],'*.hdf5'))
+PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #zero
-# PATH_LIST = get_path_with_annotation(info['2d_data']['csv_path'],'path',ROI_NAME)
+# PATH_LIST = get_path_with_annotation(info['2d_data']['train_csv_path'],'path',ROI_NAME)
 
 #half
-# PATH_LIST = get_path_with_annotation_ratio(info['2d_data']['csv_path'],'path',ROI_NAME,ratio=0.5)
+# PATH_LIST = get_path_with_annotation_ratio(info['2d_data']['train_csv_path'],'path',ROI_NAME,ratio=0.5)
 #---------------------------------
 
 
@@ -99,7 +99,7 @@ INIT_TRAINER = {
   'mode':MODE,
   'topk':20,
   'freeze':None,
-  'use_fp16':True #False if the machine you used without tensor core
+  'use_fp16':False #False if the machine you used without tensor core
  }
 #---------------------------------
 
@@ -118,7 +118,7 @@ else:
 SETUP_TRAINER = {
   'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),
   'log_dir':'./log/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME), 
-  'optimizer':'Adam',
+  'optimizer':'AdamW',
   'loss_fun':LOSS_FUN,
   'class_weight':None, #[1,4]
   'lr_scheduler':'MultiStepLR', #'CosineAnnealingLR'

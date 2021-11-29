@@ -78,8 +78,8 @@ def annotation_check(input_path, save_path, annotation_list):
 
 
 if __name__ == "__main__":
-
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_v2.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
     annotation_check(info['dicom_path'], info['annotation_path'],info['annotation_list'])

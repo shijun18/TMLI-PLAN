@@ -1,3 +1,15 @@
+# -*- encoding: utf-8 -*-
+'''
+@File    :   trainer.py
+@Time    :   2021/11/29 16:51:29
+@Author  :   Jun Shi 
+@Version :   1.0
+@Contact :   shijun18@mail.ustc.edu.cn
+@License :   (C)Copyright 2019-2025, USTC-ACSA
+'''
+
+# here put the import lib
+
 import os
 import torch
 import torch.nn as nn
@@ -8,7 +20,6 @@ from torchvision import transforms
 import numpy as np
 import math
 import shutil
-
 from torch.nn import functional as F
 
 from data_utils.transformer import RandomFlip2D, RandomRotate2D, RandomErase2D,RandomZoom2D,RandomAdjust2D,RandomNoise2D,RandomDistort2D
@@ -22,7 +33,7 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 # GPU version.
-
+from utils import dfs_remove_weight
 
 class SemanticSeg(object):
     '''
@@ -194,7 +205,7 @@ class SemanticSeg(object):
                 RandomZoom2D(),
                 RandomDistort2D(),
                 RandomRotate2D(),
-                # RandomFlip2D(mode='hv'),
+                RandomFlip2D(mode='v'),
                 # RandomAdjust2D(),
                 RandomNoise2D(),
                 To_Tensor(num_class=self.num_classes)
@@ -217,9 +228,9 @@ class SemanticSeg(object):
         # optimizer setting
         optimizer = self._get_optimizer(optimizer, net, lr)
         scaler = GradScaler()
-        if self.pre_trained and self.ckpt_point:
-            checkpoint = torch.load(self.weight_path)
-            optimizer.load_state_dict(checkpoint['optimizer'])
+        # if self.pre_trained and self.ckpt_point:
+        #     checkpoint = torch.load(self.weight_path)
+            # optimizer.load_state_dict(checkpoint['optimizer'])
 
         if lr_scheduler is not None:
             lr_scheduler = self._get_lr_scheduler(lr_scheduler, optimizer)
@@ -274,7 +285,7 @@ class SemanticSeg(object):
                     'epoch': epoch,
                     'save_dir': output_dir,
                     'state_dict': state_dict,
-                    'optimizer': optimizer.state_dict()
+                    # 'optimizer': optimizer.state_dict()
                 }
 
                 file_name = 'epoch:{}-train_loss:{:.5f}-train_dice:{:.5f}-train_run_dice:{:.5f}-train_acc:{:.5f}-val_loss:{:.5f}-val_dice:{:.5f}-val_run_dice:{:.5f}-val_acc:{:.5f}.pth'.format(
@@ -289,8 +300,9 @@ class SemanticSeg(object):
             if early_stopping.early_stop:
                 print('Early Stopping!')
                 break
-
+        
         self.writer.close()
+        dfs_remove_weight(output_dir,3)
 
     def _train_on_epoch(self, epoch, net, criterion, optimizer, train_loader, scaler):
 

@@ -66,7 +66,7 @@ def get_weight_path(ckpt_path):
     
     
 
-def remove_weight_path(ckpt_path,retain=10):
+def remove_weight_path(ckpt_path,retain=3):
 
     if os.path.isdir(ckpt_path):
         pth_list = os.listdir(ckpt_path)
@@ -76,12 +76,12 @@ def remove_weight_path(ckpt_path,retain=10):
                 os.remove(os.path.join(ckpt_path,pth_item))
 
 
-def dfs_remove_weight(ckpt_path):
+def dfs_remove_weight(ckpt_path,retain=3):
     for sub_path in os.scandir(ckpt_path):
         if sub_path.is_dir():
-            dfs_remove_weight(sub_path.path)
+            dfs_remove_weight(sub_path.path,retain)
         else:
-            remove_weight_path(ckpt_path)
+            remove_weight_path(ckpt_path,retain)
             break  
 
 if __name__ == "__main__":

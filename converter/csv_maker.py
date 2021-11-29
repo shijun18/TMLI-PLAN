@@ -70,8 +70,8 @@ if __name__ == "__main__":
     json_file = './static_files/TMLI_config_up.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
-        input_path = info['2d_data']['save_path']
-        save_path = info['2d_data']['csv_path']
+        input_path = info['2d_data']['train_path']
+        save_path = info['2d_data']['train_csv_path']
         
         # for test data
         # input_path = info['2d_data']['test_path']
