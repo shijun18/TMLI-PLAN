@@ -91,21 +91,24 @@ class RandomFlip2D(object):
         mask = Image.fromarray(np.uint8(mask))
 
         if 'h' in self.mode and 'v' in self.mode:
-            if np.random.uniform(0, 1) > 0.5:
+            random_factor = np.random.uniform(0, 1)
+            if random_factor < 0.3:
                 image = image.transpose(Image.FLIP_LEFT_RIGHT)
                 mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
-            else:
+            elif random_factor < 0.6:
                 image = image.transpose(Image.FLIP_TOP_BOTTOM)
                 mask = mask.transpose(Image.FLIP_TOP_BOTTOM)
 
         elif 'h' in self.mode:
-            image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+            if np.random.uniform(0, 1) > 0.5:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
+                mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
 
         elif 'v' in self.mode:
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            mask = mask.transpose(Image.FLIP_TOP_BOTTOM)
-        
+            if np.random.uniform(0, 1) > 0.5:
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)
+                mask = mask.transpose(Image.FLIP_TOP_BOTTOM)
+            
         image = np.array(image).astype(np.float32)
         mask = np.array(mask).astype(np.float32)
         new_sample = {'image': image, 'mask': mask}
@@ -260,65 +263,67 @@ class RandomDistort2D(object):
     Returns:
     - adjusted image
     """
-    def __init__(self,random_state=None,alpha=200,sigma=20,grid_scale=4):
+    def __init__(self,random_state=None,alpha=200,sigma=20,grid_scale=4,prob=0.5):
         self.random_state = random_state
         self.alpha = alpha
         self.sigma = sigma
         self.grid_scale = grid_scale
+        self.prob = prob
 
     def __call__(self, sample):
-        image = sample['image']
-        mask = sample['mask']
+        if np.random.uniform(0, 1) > self.prob:
+            image = sample['image']
+            mask = sample['mask']
 
-        if self.random_state is None:
-            random_state = np.random.RandomState(None)
+            if self.random_state is None:
+                random_state = np.random.RandomState(None)
 
-        im_merge = np.concatenate((image[...,None], mask[...,None]), axis=2)
-        shape = im_merge.shape
-        shape_size = shape[:2]
+            im_merge = np.concatenate((image[...,None], mask[...,None]), axis=2)
+            shape = im_merge.shape
+            shape_size = shape[:2]
 
-        self.alpha //= self.grid_scale  # Does scaling these make sense? seems to provide
-        self.sigma //= self.grid_scale  # more similar end result when scaling grid used.
-        grid_shape = (shape_size[0]//self.grid_scale, shape_size[1]//self.grid_scale)
+            self.alpha //= self.grid_scale  # Does scaling these make sense? seems to provide
+            self.sigma //= self.grid_scale  # more similar end result when scaling grid used.
+            grid_shape = (shape_size[0]//self.grid_scale, shape_size[1]//self.grid_scale)
 
-        blur_size = int(4 * self.sigma) | 1
-        rand_x = cv2.GaussianBlur(
-            (random_state.rand(*grid_shape) * 2 - 1).astype(np.float32),
-            ksize=(blur_size, blur_size), sigmaX=self.sigma) * self.alpha
-        rand_y = cv2.GaussianBlur(
-            (random_state.rand(*grid_shape) * 2 - 1).astype(np.float32),
-            ksize=(blur_size, blur_size), sigmaX=self.sigma) * self.alpha
-        if self.grid_scale > 1:
-            rand_x = cv2.resize(rand_x, shape_size[::-1])
-            rand_y = cv2.resize(rand_y, shape_size[::-1])
+            blur_size = int(4 * self.sigma) | 1
+            rand_x = cv2.GaussianBlur(
+                (random_state.rand(*grid_shape) * 2 - 1).astype(np.float32),
+                ksize=(blur_size, blur_size), sigmaX=self.sigma) * self.alpha
+            rand_y = cv2.GaussianBlur(
+                (random_state.rand(*grid_shape) * 2 - 1).astype(np.float32),
+                ksize=(blur_size, blur_size), sigmaX=self.sigma) * self.alpha
+            if self.grid_scale > 1:
+                rand_x = cv2.resize(rand_x, shape_size[::-1])
+                rand_y = cv2.resize(rand_y, shape_size[::-1])
 
-        grid_x, grid_y = np.meshgrid(np.arange(shape_size[1]), np.arange(shape_size[0]))
-        grid_x = (grid_x + rand_x).astype(np.float32)
-        grid_y = (grid_y + rand_y).astype(np.float32)
+            grid_x, grid_y = np.meshgrid(np.arange(shape_size[1]), np.arange(shape_size[0]))
+            grid_x = (grid_x + rand_x).astype(np.float32)
+            grid_y = (grid_y + rand_y).astype(np.float32)
 
-        distorted_img = cv2.remap(im_merge, grid_x, grid_y, borderMode=cv2.BORDER_REFLECT_101, interpolation=cv2.INTER_LINEAR)
-        '''
-        alpha, sigma, alpha_affine = im_merge.shape[1] * 2, im_merge.shape[1] * 0.08, im_merge.shape[1] * 0.08
+            distorted_img = cv2.remap(im_merge, grid_x, grid_y, borderMode=cv2.BORDER_REFLECT_101, interpolation=cv2.INTER_LINEAR)
+            '''
+            alpha, sigma, alpha_affine = im_merge.shape[1] * 2, im_merge.shape[1] * 0.08, im_merge.shape[1] * 0.08
 
-        # Random affine
-        center_square = np.float32(shape_size) // 2
-        square_size = min(shape_size) // 3
+            # Random affine
+            center_square = np.float32(shape_size) // 2
+            square_size = min(shape_size) // 3
 
-        pts1 = np.float32([center_square + square_size, [center_square[0]+square_size, center_square[1]-square_size], center_square - square_size])
-        pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine, size=pts1.shape).astype(np.float32)
-        M = cv2.getAffineTransform(pts1, pts2)
-        im_merge = cv2.warpAffine(im_merge, M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
+            pts1 = np.float32([center_square + square_size, [center_square[0]+square_size, center_square[1]-square_size], center_square - square_size])
+            pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine, size=pts1.shape).astype(np.float32)
+            M = cv2.getAffineTransform(pts1, pts2)
+            im_merge = cv2.warpAffine(im_merge, M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
 
-        dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
-        dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
-        dz = np.zeros_like(dx)
+            dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
+            dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
+            dz = np.zeros_like(dx)
 
-        x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), np.arange(shape[2]))
-        indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(z, (-1, 1))
+            x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), np.arange(shape[2]))
+            indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(z, (-1, 1))
 
-        distorted_img = map_coordinates(im_merge, indices, order=1, mode='reflect').reshape(shape)
-        '''
-        sample['image'] = distorted_img[...,0]
-        sample['mask']  = distorted_img[...,1]
+            distorted_img = map_coordinates(im_merge, indices, order=1, mode='reflect').reshape(shape)
+            '''
+            sample['image'] = distorted_img[...,0]
+            sample['mask']  = distorted_img[...,1]
 
         return sample

@@ -27,7 +27,7 @@ VERSION = 'v4.1'
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '2'
+DEVICE = '2,3'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -66,7 +66,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (512,512)
-BATCH_SIZE = 16
+BATCH_SIZE = 24
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
@@ -77,7 +77,7 @@ INIT_TRAINER = {
   'net_name':NET_NAME,
   'encoder_name':ENCODER_NAME,
   'lr':1e-3, 
-  'n_epoch':200,
+  'n_epoch':120,
   'channels':1,
   'num_classes':NUM_CLASSES, 
   'roi_number':ROI_NUMBER,
