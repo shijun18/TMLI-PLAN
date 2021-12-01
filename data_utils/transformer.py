@@ -16,9 +16,10 @@ class RandomErase2D(object):
     Args:
 
     '''
-    def __init__(self, window_size=(64,64), scale_flag=True):
+    def __init__(self, window_size=(64,64), scale_flag=True, prob=0.5):
         self.window_size = window_size
         self.scale_flag = scale_flag
+        self.prob = prob
     
     def __call__(self, sample):
         if self.scale_flag:
@@ -48,16 +49,18 @@ class RandomErase2D(object):
         else:
             roi_window.append((random.randint(0,64),random.randint(-64,0)))
             roi_window.append((random.randint(0,64),random.randint(-64,0)))
-        direction = random.choice(['t','d','l','r','no_erase'])
-        # print(direction)
-        if direction == 't':
-            image[:roi_window[0][0],:] = 0
-        elif direction == 'd':
-            image[roi_window[0][1]:,:] = 0
-        elif direction == 'l':
-            image[:,:roi_window[1][0]] = 0
-        elif direction == 'r':
-            image[:,roi_window[1][1]:] = 0
+        
+        if np.random.uniform(0, 1) > self.prob:
+            direction = random.choice(['t','d','l','r'])
+            # print(direction)
+            if direction == 't':
+                image[:roi_window[0][0],:] = 0
+            elif direction == 'd':
+                image[roi_window[0][1]:,:] = 0
+            elif direction == 'l':
+                image[:,:roi_window[1][0]] = 0
+            elif direction == 'r':
+                image[:,roi_window[1][1]:] = 0
 
         new_sample = {'image': image, 'mask': mask}
 
