@@ -6,8 +6,10 @@ from utils import get_path_with_annotation,get_path_with_annotation_ratio
 from utils import get_weight_path
 
 __disease__ = ['TMLI','TMLI_UP']
-__net__ = ['unet','unet++','FPN','deeplabv3+','swin_trans_unet']
-__encoder_name__ = [None,'resnet18','resne34','resnet50','se_resnet50','resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
+__cnn_net__ = ['unet','unet++','FPN','deeplabv3+']
+__trans_net__ = ['swin_trans_unet','swin_trans_att_unet','UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
+__encoder_name__ = [None,'resnet18','resnet34','resnet50','se_resnet50', \
+                   'resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
                     'efficientnet-b4', 'efficientnet-b5','efficientnet-b6','efficientnet-b7']
 
 __mode__ = ['cls','seg','mtl']
@@ -20,9 +22,9 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'deeplabv3+'
+NET_NAME = 'unet'
 ENCODER_NAME = 'resnet18'
-VERSION = 'v4.1'
+VERSION = 'v1.1'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
@@ -66,7 +68,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (512,512)
-BATCH_SIZE = 24
+BATCH_SIZE = 16
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
@@ -99,7 +101,7 @@ INIT_TRAINER = {
   'mode':MODE,
   'topk':20,
   'freeze':None,
-  'use_fp16':False #False if the machine you used without tensor core
+  'use_fp16':True #False if the machine you used without tensor core
  }
 #---------------------------------
 
@@ -121,7 +123,7 @@ SETUP_TRAINER = {
   'optimizer':'AdamW',
   'loss_fun':LOSS_FUN,
   'class_weight':None, #[1,4]
-  'lr_scheduler':'MultiStepLR', #'CosineAnnealingLR'
+  'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
   }
 #---------------------------------
 TEST_PATH = None
