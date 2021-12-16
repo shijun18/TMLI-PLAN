@@ -219,7 +219,8 @@ class SemanticSeg(object):
                                   batch_size=self.batch_size,
                                   shuffle=True,
                                   num_workers=self.num_workers,
-                                  pin_memory=True)
+                                  pin_memory=True,
+                                  drop_last=True)
 
         # copy to gpu
         net = net.cuda()
@@ -237,7 +238,7 @@ class SemanticSeg(object):
 
         # loss_threshold = 1.0
 
-        early_stopping = EarlyStopping(patience=20,verbose=True,monitor='val_run_dice',op_type='max')
+        early_stopping = EarlyStopping(patience=30,verbose=True,monitor='val_run_dice',op_type='max')
         for epoch in range(self.start_epoch, self.n_epoch):
             train_loss, train_dice, train_acc, train_run_dice = self._train_on_epoch(epoch, net, loss, optimizer, train_loader, scaler)
 
@@ -329,30 +330,39 @@ class SemanticSeg(object):
                 if self.mode == 'cls':
                     loss = criterion(output[1], label)
                 elif self.mode == 'seg':
-                    loss = criterion(output[0], target)
+                    if isinstance(output,list) or isinstance(output,tuple):
+                        loss = criterion(output[0], target)
+                    else:
+                        loss = criterion(output, target)
                 else:
                     loss = criterion(output,[target,label])
 
             optimizer.zero_grad()
             if self.use_fp16:
                 scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                nn.utils.clip_grad_norm_(net.parameters(), max_norm=20, norm_type=2)
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 loss.backward()
+                nn.utils.clip_grad_norm_(net.parameters(), max_norm=20, norm_type=2)
                 optimizer.step()
 
-            cls_output = output[1] #N*C
-            cls_output = torch.sigmoid(cls_output).float()
+            if self.mode == 'cls':
+                cls_output = output[1] #N*C
+                cls_output = torch.sigmoid(cls_output).float()
+                # measure acc
+                acc = accuracy(cls_output.detach(), label)
+                train_acc.update(acc.item(), data.size(0))
 
-            seg_output = output[0].float() #N*C*H*W
+            if isinstance(output,list) or isinstance(output,tuple):
+                seg_output = output[0].float() #N*C*H*W
+            else:
+                seg_output = output.float()
             seg_output = F.softmax(seg_output, dim=1)
 
             loss = loss.float()
-
-            # measure acc
-            acc = accuracy(cls_output.detach(), label)
-            train_acc.update(acc.item(), data.size(0))
 
             # measure dice and record loss
             dice = compute_dice(seg_output.detach(), target)
@@ -369,20 +379,26 @@ class SemanticSeg(object):
             if self.global_step % 10 == 0:
                 if self.mode == 'cls':
                     print('epoch:{},step:{},train_loss:{:.5f},train_acc:{:.5f},lr:{}'.format(epoch, step, loss.item(), acc.item(), optimizer.param_groups[0]['lr']))
+                    self.writer.add_scalars('data/loss_acc', {
+                        'train_loss': loss.item(),
+                        'train_acc': acc.item()
+                    }, self.global_step)
                 elif self.mode == 'seg':
                     rundice, dice_list = run_dice.compute_dice() 
                     print("Category Dice: ", dice_list)
                     print('epoch:{},step:{},train_loss:{:.5f},train_dice:{:.5f},run_dice:{:.5f},lr:{}'.format(epoch, step, loss.item(), dice.item(), rundice, optimizer.param_groups[0]['lr']))
                     # run_dice.init_op()
+                    self.writer.add_scalars('data/loss_dice', {
+                        'train_loss': loss.item(),
+                        'train_dice': dice.item()
+                    }, self.global_step)
                 else:
                     print('epoch:{},step:{},train_loss:{:.5f},train_dice:{:.5f},train_acc:{:.5f},lr:{}'.format(epoch, step, loss.item(), dice.item(),acc.item(), optimizer.param_groups[0]['lr']))
-
-                
-                self.writer.add_scalars('data/train_loss_dice', {
-                    'train_loss': loss.item(),
-                    'train_dice': dice.item(),
-                    'train_acc': acc.item()
-                }, self.global_step)
+                    self.writer.add_scalars('data/loss_dice_acc', {
+                        'train_loss': loss.item(),
+                        'train_dice': dice.item(),
+                        'train_acc': acc.item()
+                    }, self.global_step)
 
             self.global_step += 1
 
@@ -417,7 +433,8 @@ class SemanticSeg(object):
                                 batch_size=self.batch_size,
                                 shuffle=False,
                                 num_workers=self.num_workers,
-                                pin_memory=True)
+                                pin_memory=True,
+                                drop_last=True)
 
         val_loss = AverageMeter()
         val_dice = AverageMeter()
@@ -440,22 +457,28 @@ class SemanticSeg(object):
                     if self.mode == 'cls':
                         loss = criterion(output[1], label)
                     elif self.mode == 'seg':
-                        loss = criterion(output[0], target)
+                        if isinstance(output,list) or isinstance(output,tuple):
+                            loss = criterion(output[0], target)
+                        else:
+                            loss = criterion(output, target)
                     else:
                         loss = criterion(output,[target,label])
 
+                if self.mode == 'cls':
+                    cls_output = output[1]
+                    cls_output = torch.sigmoid(cls_output).float()
+                    # measure acc
+                    acc = accuracy(cls_output.detach(), label)
+                    val_acc.update(acc.item(),data.size(0))
 
-                cls_output = output[1]
-                cls_output = torch.sigmoid(cls_output).float()
-
-                seg_output = output[0].float()
+                if isinstance(output,list) or isinstance(output,tuple):
+                    seg_output = output[0].float() #N*C*H*W
+                else:
+                    seg_output = output.float()
                 seg_output = F.softmax(seg_output, dim=1)
 
                 loss = loss.float()
 
-                # measure acc
-                acc = accuracy(cls_output.detach(), label)
-                val_acc.update(acc.item(),data.size(0))
 
                 # measure dice and record loss
                 dice = compute_dice(seg_output.detach(), target)
@@ -542,24 +565,28 @@ class SemanticSeg(object):
                 with autocast(self.use_fp16):
                     output = net(data)
 
-                cls_output = output[1]
-                cls_output = torch.sigmoid(cls_output).float()
+                if mode == 'cls':
+                    cls_output = output[1]
+                    cls_output = torch.sigmoid(cls_output).float()
+                    # measure acc
+                    acc = accuracy(cls_output.detach(), label)
+                    test_acc.update(acc.item(),data.size(0))
+                    cls_result['prob'].extend(cls_output.detach().squeeze().cpu().numpy().tolist())
+                    cls_output = (cls_output > 0.5).float() # N*C
+                    cls_result['pred'].extend(cls_output.detach().squeeze().cpu().numpy().tolist())
+                    cls_result['true'].extend(label.detach().squeeze().cpu().numpy().tolist())
+                    # print(cls_output.detach())
 
-                seg_output = output[0].float()
+                if isinstance(output,list) or isinstance(output,tuple):
+                    seg_output = output[0].float() #N*C*H*W
+                else:
+                    seg_output = output.float()
                 seg_output = F.softmax(seg_output, dim=1)
-
-                # measure acc
-                acc = accuracy(cls_output.detach(), label)
-                test_acc.update(acc.item(),data.size(0))
 
                 # measure dice and iou for evaluation (float)
                 dice = compute_dice(seg_output.detach(), target, ignore_index=0)
                 test_dice.update(dice.item(), data.size(0))
-                cls_result['prob'].extend(cls_output.detach().squeeze().cpu().numpy().tolist())
-                cls_output = (cls_output > 0.5).float() # N*C
-                cls_result['pred'].extend(cls_output.detach().squeeze().cpu().numpy().tolist())
-                cls_result['true'].extend(label.detach().squeeze().cpu().numpy().tolist())
-                # print(cls_output.detach())
+                
                 if mode == 'mtl':
                     b, c, _, _ = seg_output.size()
                     seg_output[:,1:,...] = seg_output[:,1:,...] * cls_output.view(b,c-1,1,1).expand_as(seg_output[:,1:,...])
@@ -577,7 +604,7 @@ class SemanticSeg(object):
 
                 torch.cuda.empty_cache()
                 
-                print('step:{},test_dice:{:.5f},test_acc:{:.5f}'.format(step,dice.item(),acc.item()))
+                print('step:{},test_dice:{:.5f}'.format(step,dice.item()))
             
         rundice, dice_list = run_dice.compute_dice() 
         print("Category Dice: ", dice_list)
@@ -644,7 +671,7 @@ class SemanticSeg(object):
                     aux_params={"classes":self.num_classes-1} 
                 )
 
-
+        ## transformer + Unet
         elif net_name == 'swin_trans_unet':
             if self.encoder_name is not None:
                 raise ValueError(
@@ -653,7 +680,36 @@ class SemanticSeg(object):
             else:
                 from model.unet import unet
                 net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
-            
+
+        elif net_name == 'UTNet':
+            from model.trans_model.utnet import UTNet
+            net = UTNet(self.channels, base_chan=32,num_classes=self.num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
+        elif net_name == 'UTNet_encoder':
+            from model.trans_model.utnet import UTNet_Encoderonly
+            # Apply transformer blocks only in the encoder
+            net = UTNet_Encoderonly(self.channels, base_chan=32, num_classes=self.num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
+        elif net_name =='TransUNet':
+            from model.trans_model.transunet import VisionTransformer as ViT_seg
+            from model.trans_model.transunet import CONFIGS as CONFIGS_ViT_seg
+            config_vit = CONFIGS_ViT_seg['R50-ViT-B_16']
+            config_vit.n_classes = self.num_classes 
+            config_vit.n_skip = 3 
+            config_vit.patches.grid = (int(self.input_shape[0]/16), int(self.input_shape[1]/16))
+            net = ViT_seg(config_vit, img_size=self.input_shape[0], num_classes=self.num_classes)
+            #net.load_from(weights=np.load('./initmodel/R50+ViT-B_16.npz')) # uncomment this to use pretrain model download from TransUnet git repo
+
+        elif net_name == 'ResNet_UTNet':
+            from model.trans_model.resnet_utnet import ResNet_UTNet
+            net = ResNet_UTNet(self.channels, self.num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True)
+        
+        elif net_name == 'SwinUNet':
+            from model.trans_model.swin_unet import SwinUnet, SwinUnet_config
+            config = SwinUnet_config()
+            config.num_classes = self.num_classes
+            config.in_chans = self.channels
+            net = SwinUnet(config, img_size=self.input_shape[0], num_classes=self.num_classes)
+            # net.load_from('./initmodel/swin_tiny_patch4_window7_224.pth')
+
         return net
 
     def _get_loss(self, loss_fun, class_weight=None):
