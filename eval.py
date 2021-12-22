@@ -172,9 +172,9 @@ class Config:
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'unet'
-    encoder_name = None
-    version = 'v1.0'
+    net_name = 'unet++'
+    encoder_name = 'resnet50'
+    version = 'v2.3'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
@@ -226,8 +226,8 @@ if __name__ == '__main__':
 
         dice_csv = pd.DataFrame(data=info_dice)
         hd_csv = pd.DataFrame(data=info_hd)
-        dice_csv.to_csv(f'./result/{config.version}_fold{config.fold}_dice.csv')
-        hd_csv.to_csv(f'./result/{config.version}_fold{config.fold}_hd.csv')
+        dice_csv.to_csv(f'./result/raw_data/{config.version}_fold{config.fold}_dice.csv')
+        hd_csv.to_csv(f'./result/raw_data/{config.version}_fold{config.fold}_hd.csv')
 
         total_dice = np.stack(total_dice,axis=0) #sample*classes
         total_category_dice = np.mean(total_dice,axis=0)
