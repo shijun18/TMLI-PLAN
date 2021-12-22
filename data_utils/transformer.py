@@ -259,6 +259,23 @@ class RandomNoise2D(object):
         return sample
 
 
+class RandomGaussionNoise2D(object):
+    """
+    Data augmentation method.
+    Add random Gaussion noise to the image with a probability.
+    Returns:
+    - adjusted image
+    """
+    def __call__(self, sample):
+        prob = random.uniform(0,1)
+        if prob > 0.9:
+            image = sample['image']
+            gaussion_noise = np.random.normal(size=image.shape)*0.002
+            image += gaussion_noise
+            sample['image'] = image
+        return sample
+
+
 class RandomDistort2D(object):
     """
     Data augmentation method.

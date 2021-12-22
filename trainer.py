@@ -22,6 +22,7 @@ import math
 import shutil
 from torch.nn import functional as F
 
+from data_utils.transformer_3d import RandomFlip3D,RandomTranslationRotationZoom3D
 from data_utils.transformer import RandomFlip2D, RandomRotate2D, RandomErase2D,RandomZoom2D,RandomAdjust2D,RandomNoise2D,RandomDistort2D
 from data_utils.data_loader import DataGenerator, To_Tensor, CropResize, Trunc_and_Normalize
 
@@ -198,18 +199,27 @@ class SemanticSeg(object):
                 To_Tensor(num_class=self.num_classes)
             ])
         else:
-            train_transformer = transforms.Compose([
-                Trunc_and_Normalize(self.scale),
-                CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
-                RandomErase2D(scale_flag=False),
-                RandomZoom2D(),
-                RandomDistort2D(),
-                RandomRotate2D(),
-                RandomFlip2D(mode='v'),
-                # RandomAdjust2D(),
-                RandomNoise2D(),
-                To_Tensor(num_class=self.num_classes)
-            ])
+            if len(self.input_shape) > 2:
+                train_transformer = transforms.Compose([
+                    Trunc_and_Normalize(self.scale),
+                    CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
+                    # RandomTranslationRotationZoom3D(mode='trz',num_class=self.num_classes),
+                    RandomFlip3D(mode='hv'),
+                    To_Tensor(num_class=self.num_classes)
+                ])
+            else:
+                train_transformer = transforms.Compose([
+                    Trunc_and_Normalize(self.scale),
+                    CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
+                    RandomErase2D(scale_flag=False),
+                    RandomZoom2D(),
+                    RandomDistort2D(),
+                    RandomRotate2D(),
+                    RandomFlip2D(mode='v'),
+                    # RandomAdjust2D(),
+                    RandomNoise2D(),
+                    To_Tensor(num_class=self.num_classes)
+                ])
         train_dataset = DataGenerator(train_path,
                                       roi_number=self.roi_number,
                                       num_class=self.num_classes,
@@ -814,7 +824,7 @@ class SemanticSeg(object):
                 optimizer, T_max=self.T_max)
         elif lr_scheduler == 'CosineAnnealingWarmRestarts':
             lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                        optimizer, 5, T_mult=2)
+                        optimizer, 20, T_mult=2)
         return lr_scheduler
 
     def _get_pre_trained(self, weight_path, ckpt_point=True):

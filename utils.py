@@ -4,6 +4,48 @@ import h5py
 import numpy as np
 import torch
 import random
+from skimage.metrics import hausdorff_distance
+
+def binary_dice(y_true, y_pred):
+    smooth = 1e-7
+    y_true_f = y_true.flatten()
+    y_pred_f = y_pred.flatten()
+    intersection = np.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (np.sum(y_true_f) + np.sum(y_pred_f) + smooth)
+
+def multi_dice(y_true,y_pred,num_classes):
+    dice_list = []
+    for i in range(num_classes):
+        true = (y_true == i+1).astype(np.float32)
+        pred = (y_pred == i+1).astype(np.float32)
+        dice = binary_dice(true,pred)
+        dice_list.append(dice)
+    
+    dice_list = [round(case, 4) for case in dice_list]
+    
+    return dice_list, round(np.mean(dice_list),4)
+
+
+def hd_2d(true,pred):
+    hd_list = []
+    for i in range(true.shape[0]):
+        if np.sum(true[i]) != 0 and np.sum(pred[i]) != 0:
+            hd_list.append(hausdorff_distance(true[i],pred[i]))
+    
+    return np.mean(hd_list)
+
+def multi_hd(y_true,y_pred,num_classes):
+    hd_list = []
+    for i in range(num_classes):
+        true = (y_true == i+1).astype(np.float32)
+        pred = (y_pred == i+1).astype(np.float32)
+        hd = hd_2d(true,pred)
+        hd_list.append(hd)
+    
+    hd_list = [round(case, 4) for case in hd_list]
+    
+    return hd_list, round(np.mean(hd_list),4)
+
 
 
 def hdf5_reader(data_path, key):
@@ -86,5 +128,5 @@ def dfs_remove_weight(ckpt_path,retain=3):
 
 if __name__ == "__main__":
 
-    ckpt_path = './ckpt/'
+    ckpt_path = './ckpt/TMLI_UP/seg/v9.0/All/fold1/'
     dfs_remove_weight(ckpt_path)
