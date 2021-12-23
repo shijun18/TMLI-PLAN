@@ -29,6 +29,41 @@ class DoubleConv2D(nn.Module):
     def forward(self, x):
         return self.double_conv(x)
 
+
+
+class ResDoubleConv2D(nn.Module):
+    """(convolution => [BN] => ReLU) * 2"""
+
+    def __init__(self, in_channels, out_channels, norm_layer=None):
+        super(ResDoubleConv2D,self).__init__()
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        else:
+            norm_layer = norm_layer
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            norm_layer(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            norm_layer(out_channels),
+        )
+        self.reduce_conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=1),
+            norm_layer(out_channels)
+        )
+        self.downsample = in_channels != out_channels
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        res = x
+        out = self.double_conv(x)
+        if self.downsample:
+            res = self.reduce_conv(res)
+        out += res 
+        out = self.relu(out)
+        return out
+
+
 #-------------------------------------------
 
 class Down2D(nn.Module):
@@ -97,5 +132,13 @@ def simplenet(**kwargs):
     return SimpleNet(down=Down2D,
                     width=[32,64,128,256,512],
                     conv_builder=DoubleConv2D,
+                    norm_layer=None,
+                    **kwargs)
+
+
+def simplenet_res(**kwargs):
+    return SimpleNet(down=Down2D,
+                    width=[32,64,128,256,512],
+                    conv_builder=ResDoubleConv2D,
                     norm_layer=None,
                     **kwargs)
