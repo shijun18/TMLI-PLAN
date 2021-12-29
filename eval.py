@@ -5,10 +5,11 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from data_utils.transformer import RandomFlip2D, RandomRotate2D, RandomErase2D,RandomZoom2D,RandomAdjust2D,RandomNoise2D,RandomDistort2D
 from data_utils.data_loader import DataGenerator, To_Tensor, CropResize, Trunc_and_Normalize
 from torch.cuda.amp import autocast as autocast
 from utils import get_weight_path,multi_dice,multi_hd
+import warnings
+warnings.filterwarnings('ignore')
 
 def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)):
 
@@ -69,7 +70,13 @@ def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)
                     classes=num_classes,                     
                     aux_params={"classes":num_classes-1} 
                 )
-            
+        elif 'res_unet' in net_name:
+            from model.res_unet import res_unet
+            net = res_unet(net_name,in_channels=channels,classes=num_classes)
+        
+        elif 'att_unet' in net_name:
+            from model.att_unet import att_unet
+            net = att_unet(net_name,in_channels=channels,classes=num_classes)
         ## transformer + Unet
         elif net_name == 'swin_trans_unet':
             if encoder_name is not None:
@@ -135,8 +142,9 @@ def eval_process(test_path,config):
     print(weight_path)
 
     # get net
-    net = get_net(config.net_name,config.encoder_name,config.channels,config.num_classes)
+    net = get_net(config.net_name,config.encoder_name,config.channels,config.num_classes,config.input_shape)
     checkpoint = torch.load(weight_path)
+    # print(checkpoint['state_dict'])
     net.load_state_dict(checkpoint['state_dict'])
 
     pred = []
@@ -153,8 +161,10 @@ def eval_process(test_path,config):
 
             with autocast(True):
                 output = net(data)
-
-            seg_output = output[0]
+            if isinstance(output,tuple) or isinstance(output,list):
+                seg_output = output[0]
+            else:
+                seg_output = output
             seg_output = torch.argmax(torch.softmax(seg_output, dim=1),1).detach().cpu().numpy()                          
             target = torch.argmax(target,1).detach().cpu().numpy()
             pred.append(seg_output)
@@ -166,22 +176,22 @@ def eval_process(test_path,config):
 
 
 class Config:
-    input_shape = (512,512)
+    input_shape = (256,256) #(256,256)(512,512) 
     num_classes = 8
     channels = 1
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'unet++'
-    encoder_name = 'resnet50'
-    version = 'v2.3'
+    net_name = 'TransUNet'
+    encoder_name = None
+    version = 'v9.0'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
 
 if __name__ == '__main__':
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     # test data
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
     # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
@@ -189,7 +199,7 @@ if __name__ == '__main__':
     start = time.time()
     config = Config()
     
-    for fold in range(1,6):
+    for fold in range(5,6):
         print('****fold%d****'%fold)
         total_dice = []
         total_hd = []
@@ -207,6 +217,8 @@ if __name__ == '__main__':
             test_path.sort(key=lambda x:eval(x.split('_')[-1].split('.')[0]))
             print(len(test_path))
             pred,true = eval_process(test_path,config)
+            
+            # print(pred.shape,true.shape)
 
             category_dice, avg_dice = multi_dice(true,pred,config.num_classes - 1)
             total_dice.append(category_dice)

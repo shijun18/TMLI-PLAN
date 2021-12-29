@@ -680,6 +680,13 @@ class SemanticSeg(object):
                     classes=self.num_classes,                     
                     aux_params={"classes":self.num_classes-1} 
                 )
+        elif 'res_unet' in net_name:
+            from model.res_unet import res_unet
+            net = res_unet(net_name,in_channels=self.channels,classes=self.num_classes)
+        
+        elif 'att_unet' in net_name:
+            from model.att_unet import att_unet
+            net = att_unet(net_name,in_channels=self.channels,classes=self.num_classes)
 
         ## transformer + Unet
         elif net_name == 'swin_trans_unet':

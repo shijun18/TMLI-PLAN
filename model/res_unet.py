@@ -50,7 +50,7 @@ class ResUnet(SegmentationModel):
     def __init__(
         self,
         in_channels: int = 3,
-        encoder_name: str = "simplenet",
+        encoder_name: str = "simplenet_res",
         encoder_weights: Optional[str] = None,
         encoder_depth: int = 5,
         encoder_channels: List[int] = [32,64,128,256,512],
@@ -124,11 +124,11 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     # net = res_unet('resnet18_res_unet',in_channels=1,classes=2)
-    # net = res_unet('res_unet',in_channels=1,classes=2)
-    net = res_unet('swin_trans_res_unet',in_channels=1,classes=2)
+    net = res_unet('res_unet',in_channels=1,classes=2)
+    # net = res_unet('swin_trans_res_unet',in_channels=1,classes=2)
 
       
-    # summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
+    summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     
     # net = net.cuda()
     # net.train()

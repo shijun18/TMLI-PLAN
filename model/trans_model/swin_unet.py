@@ -1605,10 +1605,11 @@ class SwinUnet(nn.Module):
 
 
     def forward(self, x):
+        # print(x.size())
 
-        if x.size()[1] == 1:
+        # if x.size()[1] == 1:
 
-            x = x.repeat(1,3,1,1)
+        #     x = x.repeat(1,3,1,1)
 
         logits = self.swin_unet(x)
 
