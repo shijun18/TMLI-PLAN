@@ -1,2 +1,3 @@
 # TMLI-PLAN
-Study for automatic TMLI planing.
+
+Study for automatic TMLI planning.
