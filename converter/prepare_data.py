@@ -30,17 +30,21 @@ def store_images_labels(save_path, patient_id, images, labels, mode):
         hdf5_file.close()
 
 
-def prepare_data(input_path, save_path, data_shape, crop=0, mode='2d'):
+def prepare_data(input_path, save_path, data_shape, crop=0, mode='2d',for_training=True,retain=10):
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    else:
-        shutil.rmtree(save_path)
-        os.makedirs(save_path)
+    # else:
+    #     shutil.rmtree(save_path)
+    #     os.makedirs(save_path)
 
     path_list = os.listdir(input_path)
     start = time.time()
     # keep 10 samples as final test set
+    if for_training:
+        path_list = path_list[:-retain]
+    else:
+        path_list = path_list[-retain:]
     # for item in tqdm(path_list[:-10]):
     for item in tqdm(path_list):
         ID, _ = os.path.splitext(item)
@@ -74,12 +78,13 @@ def prepare_data(input_path, save_path, data_shape, crop=0, mode='2d'):
 
 if __name__ == "__main__":
     # json_file = './static_files/TMLI_config.json'
-    json_file = './static_files/TMLI_config_up.json'
+    # json_file = './static_files/TMLI_config_up.json'
+    json_file = './static_files/TMLI_config_up_v2.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
         input_path = info['npy_path']
         setting_2d = info['2d_data']
         setting_3d = info['3d_data']
-    prepare_data(input_path, setting_2d['train_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
-    # prepare_data(input_path, setting_2d['test_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
+    # prepare_data(input_path, setting_2d['train_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d')
+    prepare_data(input_path, setting_2d['test_path'], tuple(setting_2d['shape']), setting_2d['crop'],mode='2d',for_training=False)
     # prepare_data(input_path, setting_3d['train_path'], tuple(setting_3d['shape']), setting_3d['crop'],mode='3d')

@@ -20,9 +20,13 @@ def statistic_csv(csv_list,save_path):
 
 if __name__ == '__main__':
 
-    version_list = ['v1.0','v1.1','v1.3','v2.1','v2.3','v4.1','v4.10-pretrain']
+    # version_list = ['v1.0','v1.1','v1.3','v2.1','v2.3','v4.1','v4.10-pretrain']
+    # version_list = ['v9.0']
+    # version_list = ['v1.3-pretrain']
+    # version_list = ['v4.3']
+    version_list = ['v4.3-pretrain']
 
-    for version in version_list[1:]:
+    for version in version_list:
         dice_csv_list = [f'./result/raw_data/{version}_fold{str(i)}_dice.csv' for i in range(1,6)]
         save_path = f'./result/analysis/{version}_dice.csv'
         dice_list = statistic_csv(dice_csv_list,save_path)
@@ -30,4 +34,3 @@ if __name__ == '__main__':
         hd_csv_list = [f'./result/raw_data/{version}_fold{str(i)}_hd.csv' for i in range(1,6)]
         save_path = f'./result/analysis/{version}_hd.csv'
         hd_list = statistic_csv(hd_csv_list,save_path)
-        break

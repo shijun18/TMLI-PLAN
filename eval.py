@@ -176,22 +176,22 @@ def eval_process(test_path,config):
 
 
 class Config:
-    input_shape = (256,256) #(256,256)(512,512) 
+    input_shape = (512,512) #(256,256)(512,512)(448,448) 
     num_classes = 8
     channels = 1
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'TransUNet'
-    encoder_name = None
-    version = 'v9.0'
+    net_name = 'deeplabv3+'
+    encoder_name = 'resnet50'
+    version = 'v4.3-pretrain'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
 
 if __name__ == '__main__':
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '4'
     # test data
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
     # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
@@ -199,8 +199,8 @@ if __name__ == '__main__':
     start = time.time()
     config = Config()
     
-    for fold in range(5,6):
-        print('****fold%d****'%fold)
+    for fold in range(1,6):
+        print('>>>>>>>>>>>> Fold%d >>>>>>>>>>>>'%fold)
         total_dice = []
         total_hd = []
         info_dice = []
@@ -212,7 +212,7 @@ if __name__ == '__main__':
             info_item_hd = []
             info_item_dice.append(sample)
             info_item_hd.append(sample)
-            print('********%s is being processed********'%sample)
+            print('>>>>>>>>>>>> %s is being processed'%sample)
             test_path = [case.path for case in os.scandir(data_path) if case.name.split('_')[0] == sample]
             test_path.sort(key=lambda x:eval(x.split('_')[-1].split('.')[0]))
             print(len(test_path))

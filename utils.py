@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import random
 from skimage.metrics import hausdorff_distance
+from monai.metrics.hausdorff_distance import compute_hausdorff_distance
 
 def binary_dice(y_true, y_pred):
     smooth = 1e-7
@@ -46,6 +47,17 @@ def multi_hd(y_true,y_pred,num_classes):
     
     return hd_list, round(np.mean(hd_list),4)
 
+# def multi_hd(y_true,y_pred,num_classes):
+#     hd_list = []
+#     for i in range(num_classes):
+#         true = (y_true == i+1).astype(np.float32)
+#         pred = (y_pred == i+1).astype(np.float32)
+#         hd = compute_hausdorff_distance(true[None,None,:],pred[None,None,:]).cpu().numpy()[0][0]
+#         hd_list.append(hd)
+    
+#     hd_list = [round(case, 4) for case in hd_list]
+    
+#     return hd_list, round(np.mean(hd_list),4)
 
 
 def hdf5_reader(data_path, key):

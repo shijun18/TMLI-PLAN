@@ -596,9 +596,10 @@ class SwinTransformer(nn.Module):
 
 
 
-CONFIG = dict(
+DEFAULT_CONFIG = dict(
     pretrain_img_size=512,
     patch_size=4,
+    n_channels=3,
     embed_dim=96,
     depths=[2, 2, 6, 2],
     num_heads=[3, 6, 12, 24],
@@ -615,9 +616,11 @@ CONFIG = dict(
     use_checkpoint=False)
 
 
-def swin_transformer(n_channels=1):
-    CONFIG['n_channels'] = n_channels
-    net = SwinTransformer(**CONFIG)
+def swin_transformer(**kwargs):
+    for key in kwargs:
+        if key in DEFAULT_CONFIG:
+            DEFAULT_CONFIG[key] = kwargs[key]
+    net = SwinTransformer(**DEFAULT_CONFIG)
     return net
 
 

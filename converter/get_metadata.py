@@ -46,7 +46,8 @@ def get_metadata(input_path, save_path):
 
 if __name__ == "__main__":
 
-    json_file = './static_files/TMLI_config.json'
+    # json_file = './static_files/TMLI_config.json'
+    json_file = './static_files/TMLI_config_v2.json'
 
     with open(json_file, 'r') as fp:
         info = json.load(fp)

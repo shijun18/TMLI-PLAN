@@ -1,13 +1,10 @@
-import sys
-sys.path.append('..')
-
 import torch.nn as nn
 from typing import Optional, Union, List
-from model.model_config import MODEL_CONFIG
-from model.decoder.unet import UnetDecoder
-from model.get_encoder import build_encoder
-from model.base_model import SegmentationModel
-from model.lib import SynchronizedBatchNorm2d
+from .model_config import MODEL_CONFIG
+from .decoder.unet import UnetDecoder
+from .get_encoder import build_encoder
+from .base_model import SegmentationModel
+from .lib import SynchronizedBatchNorm2d
 BatchNorm2d = SynchronizedBatchNorm2d
 
 
@@ -35,7 +32,7 @@ class Unet(SegmentationModel):
             Length of the list should be the same as **encoder_depth**
         decoder_use_batchnorm: If **True**, BatchNormalization layer between Conv2D and Activation layers is used.
             Available options are **True, False**.
-        decoder_attention_type: Attention module used in decoder of the model. Available options are **None** and **scse**.
+        decoder_attention_type: Attention module used in decoder of the  Available options are **None** and **scse**.
             SCSE paper - https://arxiv.org/abs/1808.08127
         decoder_channels: List of integers which specify **in_channels** parameter for convolutions used in decoder.
             Length of the list should be the same as **encoder_depth**
@@ -115,29 +112,3 @@ def unet(model_name,**kwargs):
 
 
 
-
-if __name__ == '__main__':
-
-    from torchsummary import summary
-    import torch
-    import os 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-
-    # net = unet('resnet18_unet',in_channels=1,classes=2)
-    net = unet('unet',in_channels=1,classes=2)
-    # net = unet('swin_trans_unet',in_channels=1,classes=2)
-
-      
-    summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
-    
-    # net = net.cuda()
-    # net.train()
-    # input = torch.randn((1,1,512,512)).cuda()
-    # output = net(input)
-    # print(output.size())
-    
-
-    import sys
-    sys.path.append('..')
-    from utils import count_params_and_macs
-    count_params_and_macs(net.cuda(),(1,1,512,512))

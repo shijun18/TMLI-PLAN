@@ -1,10 +1,6 @@
-import sys
-sys.path.append('..')
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from model.lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
 
 
 
@@ -83,7 +79,7 @@ class Down2D(nn.Module):
 #-------------------------------------------
 
 class SimpleNet(nn.Module):
-    def __init__(self, down, width, conv_builder, n_channels=1, norm_layer=BatchNorm2d):
+    def __init__(self, down, width, conv_builder, n_channels=1, norm_layer=None):
         super(SimpleNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d

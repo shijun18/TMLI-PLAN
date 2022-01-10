@@ -51,6 +51,19 @@ MODEL_CONFIG = {
         'classes':2,
         'aux_classifier': False,
     },
+    'swinplusr18_unet':{
+        'in_channels':1,
+        'encoder_name':'swinplusr18',
+        'encoder_depth':5,
+        'encoder_channels':[64,64,128,256,512],  #[2,4,8,16,32]
+        'encoder_weights':None,
+        'decoder_use_batchnorm':True,
+        'decoder_attention_type':None,
+        'decoder_channels':[256,128,64,32], #[16,8,4,2]
+        'upsampling':2,
+        'classes':2,
+        'aux_classifier': False,
+    },
     'swin_trans_att_unet':{
         'in_channels':1,
         'encoder_name':'swin_transformer',

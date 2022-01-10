@@ -194,7 +194,7 @@ class SemanticSeg(object):
                 RandomErase2D(scale_flag=False),
                 RandomZoom2D(),
                 RandomRotate2D(),
-                RandomFlip2D(mode='hv'),
+                RandomFlip2D(mode='v'),
                 RandomAdjust2D(),
                 To_Tensor(num_class=self.num_classes)
             ])
@@ -204,7 +204,7 @@ class SemanticSeg(object):
                     Trunc_and_Normalize(self.scale),
                     CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
                     # RandomTranslationRotationZoom3D(mode='trz',num_class=self.num_classes),
-                    RandomFlip3D(mode='hv'),
+                    RandomFlip3D(mode='v'),
                     To_Tensor(num_class=self.num_classes)
                 ])
             else:
@@ -690,6 +690,15 @@ class SemanticSeg(object):
 
         ## transformer + Unet
         elif net_name == 'swin_trans_unet':
+            if self.encoder_name is not None:
+                raise ValueError(
+                    "encoder name must be 'None'!"
+                )
+            else:
+                from model.unet import unet
+                net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
+
+        elif net_name.startswith('swinplus'):
             if self.encoder_name is not None:
                 raise ValueError(
                     "encoder name must be 'None'!"

@@ -1,5 +1,7 @@
+import sys
+sys.path.append('..')
 import torch
-from model.encoder import resnet,swin_transformer,simplenet
+from model.encoder import swin_transformer,simplenet,trans_plus_conv,resnet
 
 
 
@@ -13,6 +15,8 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
         backbone = swin_transformer.__dict__[arch](**kwargs)
     elif arch.startswith('simplenet'):
         backbone = simplenet.__dict__[arch](**kwargs)
+    elif arch.startswith('swinplus'):
+        backbone = trans_plus_conv.__dict__[arch](**kwargs)
     else:
         raise Exception('Architecture undefined!')
 
@@ -28,10 +32,11 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
 if __name__ == '__main__':
 
     import os 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     # net = build_encoder('swin_transformer',n_channels=1)
-    net = build_encoder('resnet18',n_channels=1)
+    # net = build_encoder('resnet18',n_channels=1)
+    net = build_encoder('swinplusr18',n_channels=1)
     # net = build_encoder('simplenet',n_channels=1)
     net = net.cuda()
     net.train()
