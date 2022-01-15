@@ -138,8 +138,8 @@ class DeepLabV3Plus(SegmentationModel):
 
 
 
-def deeplabv3plus(model_name,**kwargs):
-    params = MODEL_CONFIG[model_name]
+def deeplabv3plus(model_name,encoder_name,**kwargs):
+    params = MODEL_CONFIG[model_name][encoder_name]
     dynamic_params = kwargs
     for key in dynamic_params:
         if key in params:

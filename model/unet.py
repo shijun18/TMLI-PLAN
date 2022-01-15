@@ -100,8 +100,8 @@ class Unet(SegmentationModel):
 
 
 
-def unet(model_name,**kwargs):
-    params = MODEL_CONFIG[model_name]
+def unet(model_name,encoder_name,**kwargs):
+    params = MODEL_CONFIG[model_name][encoder_name]
     dynamic_params = kwargs
     for key in dynamic_params:
         if key in params:

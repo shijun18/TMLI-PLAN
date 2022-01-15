@@ -13,109 +13,100 @@ warnings.filterwarnings('ignore')
 
 def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)):
 
-        if net_name == 'unet':
-            if encoder_name is None:
-                from model.unet import unet
-                net = unet(net_name,in_channels=channels,classes=num_classes,aux_classifier=True)
-            else:
-                import segmentation_models_pytorch as smp
-                net = smp.Unet(
-                    encoder_name=encoder_name,
-                    encoder_weights=None,
-                    in_channels=channels,
-                    classes=num_classes,                     
-                    aux_params={"classes":num_classes-1} 
-                )
-        elif net_name == 'unet++':
-            if encoder_name is None:
-                raise ValueError(
-                    "encoder name must not be 'None'!"
-                )
-            else:
-                import segmentation_models_pytorch as smp
-                net = smp.UnetPlusPlus(
-                    encoder_name=encoder_name,
-                    encoder_weights=None,
-                    in_channels=channels,
-                    classes=num_classes,                     
-                    aux_params={"classes":num_classes-1} 
-                )
+    if net_name == 'unet':
+        if encoder_name in ['simplenet','swin_transformer','swinplusr18']:
+            from model.unet import unet
+            net = unet(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes,aux_classifier=True)
+        else:
+            import segmentation_models_pytorch as smp
+            net = smp.Unet(
+                encoder_name=encoder_name,
+                encoder_weights=None,
+                in_channels=channels,
+                classes=num_classes,                     
+                aux_params={"classes":num_classes-1} 
+            )
+    elif net_name == 'unet++':
+        if encoder_name is None:
+            raise ValueError(
+                "encoder name must not be 'None'!"
+            )
+        else:
+            import segmentation_models_pytorch as smp
+            net = smp.UnetPlusPlus(
+                encoder_name=encoder_name,
+                encoder_weights=None,
+                in_channels=channels,
+                classes=num_classes,                     
+                aux_params={"classes":num_classes-1} 
+            )
 
-        elif net_name == 'FPN':
-            if encoder_name is None:
-                raise ValueError(
-                    "encoder name must not be 'None'!"
-                )
-            else:
-                import segmentation_models_pytorch as smp
-                net = smp.FPN(
-                    encoder_name=encoder_name,
-                    encoder_weights=None,
-                    in_channels=channels,
-                    classes=num_classes,                     
-                    aux_params={"classes":num_classes-1} 
-                )
-        
-        elif net_name == 'deeplabv3+':
-            if encoder_name is None:
-                raise ValueError(
-                    "encoder name must not be 'None'!"
-                )
-            else:
-                import segmentation_models_pytorch as smp
-                net = smp.DeepLabV3Plus(
-                    encoder_name=encoder_name,
-                    encoder_weights=None,
-                    in_channels=channels,
-                    classes=num_classes,                     
-                    aux_params={"classes":num_classes-1} 
-                )
-        elif 'res_unet' in net_name:
-            from model.res_unet import res_unet
-            net = res_unet(net_name,in_channels=channels,classes=num_classes)
-        
-        elif 'att_unet' in net_name:
-            from model.att_unet import att_unet
-            net = att_unet(net_name,in_channels=channels,classes=num_classes)
-        ## transformer + Unet
-        elif net_name == 'swin_trans_unet':
-            if encoder_name is not None:
-                raise ValueError(
-                    "encoder name must be 'None'!"
-                )
-            else:
-                from model.unet import unet
-                net = unet(net_name,in_channels=channels,classes=num_classes,aux_classifier=True)
+    elif net_name == 'FPN':
+        if encoder_name is None:
+            raise ValueError(
+                "encoder name must not be 'None'!"
+            )
+        else:
+            import segmentation_models_pytorch as smp
+            net = smp.FPN(
+                encoder_name=encoder_name,
+                encoder_weights=None,
+                in_channels=channels,
+                classes=num_classes,                     
+                aux_params={"classes":num_classes-1} 
+            )
+    
+    elif net_name == 'deeplabv3+':
+        if encoder_name in ['swinplusr18']:
+            from model.deeplabv3plus import deeplabv3plus
+            net = deeplabv3plus(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
+        else:
+            import segmentation_models_pytorch as smp
+            net = smp.DeepLabV3Plus(
+                encoder_name=encoder_name,
+                encoder_weights=None,
+                in_channels=channels,
+                classes=num_classes,                     
+                aux_params={"classes":num_classes-1} 
+            )
+    elif net_name == 'res_unet':
+        from model.res_unet import res_unet
+        net = res_unet(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
+    
+    elif net_name == 'att_unet':
+        from model.att_unet import att_unet
+        net = att_unet(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
+    
+    ## external transformer + U-like net
+    elif net_name == 'UTNet':
+        from model.trans_model.utnet import UTNet
+        net = UTNet(channels, base_chan=32,num_classes=num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
+    elif net_name == 'UTNet_encoder':
+        from model.trans_model.utnet import UTNet_Encoderonly
+        # Apply transformer blocks only in the encoder
+        net = UTNet_Encoderonly(channels, base_chan=32, num_classes=num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
+    elif net_name =='TransUNet':
+        from model.trans_model.transunet import VisionTransformer as ViT_seg
+        from model.trans_model.transunet import CONFIGS as CONFIGS_ViT_seg
+        config_vit = CONFIGS_ViT_seg['R50-ViT-B_16']
+        config_vit.n_classes = num_classes 
+        config_vit.n_skip = 3 
+        config_vit.patches.grid = (int(input_shape[0]/16), int(input_shape[1]/16))
+        net = ViT_seg(config_vit, img_size=input_shape[0], num_classes=num_classes)
+        #net.load_from(weights=np.load('./initmodel/R50+ViT-B_16.npz')) # uncomment this to use pretrain model download from TransUnet git repo
 
-        elif net_name == 'UTNet':
-            from model.trans_model.utnet import UTNet
-            net = UTNet(channels, base_chan=32,num_classes=num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
-        elif net_name == 'UTNet_encoder':
-            from model.trans_model.utnet import UTNet_Encoderonly
-            # Apply transformer blocks only in the encoder
-            net = UTNet_Encoderonly(channels, base_chan=32, num_classes=num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
-        elif net_name =='TransUNet':
-            from model.trans_model.transunet import VisionTransformer as ViT_seg
-            from model.trans_model.transunet import CONFIGS as CONFIGS_ViT_seg
-            config_vit = CONFIGS_ViT_seg['R50-ViT-B_16']
-            config_vit.n_classes = num_classes 
-            config_vit.n_skip = 3 
-            config_vit.patches.grid = (int(input_shape[0]/16), int(input_shape[1]/16))
-            net = ViT_seg(config_vit, img_size=input_shape[0], num_classes=num_classes)
-            #net.load_from(weights=np.load('./initmodel/R50+ViT-B_16.npz')) # uncomment this to use pretrain model download from TransUnet git repo
-
-        elif net_name == 'ResNet_UTNet':
-            from model.trans_model.resnet_utnet import ResNet_UTNet
-            net = ResNet_UTNet(channels, num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True)
-        
-        elif net_name == 'SwinUNet':
-            from model.trans_model.swin_unet import SwinUnet, SwinUnet_config
-            config = SwinUnet_config()
-            config.num_classes = num_classes
-            config.in_chans = channels
-            net = SwinUnet(config, img_size=input_shape[0], num_classes=num_classes)
-        
-        return net
+    elif net_name == 'ResNet_UTNet':
+        from model.trans_model.resnet_utnet import ResNet_UTNet
+        net = ResNet_UTNet(channels, num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True)
+    
+    elif net_name == 'SwinUNet':
+        from model.trans_model.swin_unet import SwinUnet, SwinUnet_config
+        config = SwinUnet_config()
+        config.num_classes = num_classes
+        config.in_chans = channels
+        net = SwinUnet(config, img_size=input_shape[0], num_classes=num_classes)
+    
+    return net
 
 
 def eval_process(test_path,config):

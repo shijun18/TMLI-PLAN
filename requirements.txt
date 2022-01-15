@@ -1,0 +1,14 @@
+h5py
+monai
+Pillow
+einops
+tqdm
+timm
+segmentation-models-pytorch
+torchsummary
+thop
+scipy
+scikit-image
+opencv-python
+pydicom
+SimpleITK

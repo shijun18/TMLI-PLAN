@@ -13,24 +13,22 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '6'
 
     # unet
-    # net = unet('resnet18_unet',in_channels=1,classes=2)
-    # net = unet('unet',in_channels=1,classes=2)
-    # net = unet('swin_trans_unet',in_channels=1,classes=2)
-    # net = unet('swinplusr18_unet',in_channels=1,classes=2)
+    # net = unet('unet',encoder_name='simplenet',in_channels=1,classes=2)
+    # net = unet('unet',encoder_name='swin_transformer',in_channels=1,classes=2)
+    # net = unet('unet',encoder_name='swinplusr18',in_channels=1,classes=2)
 
     # att unet
-    # net = att_unet('resnet18_att_unet',in_channels=1,classes=2)
-    # net = att_unet('att_unet',in_channels=1,classes=2)
-    # net = att_unet('swin_trans_att_unet',in_channels=1,classes=2)
+    # net = att_unet('att_unet',encoder_name='simplenet',in_channels=1,classes=2)
+    # net = att_unet('att_unet',encoder_name='swin_transformer',in_channels=1,classes=2)
+    # net = att_unet('att_unet',encoder_name='resnet18',in_channels=1,classes=2)
 
     # res unet
-    # net = res_unet('resnet18_res_unet',in_channels=1,classes=2)
-    # net = res_unet('res_unet',in_channels=1,classes=2)
-    # net = res_unet('swin_trans_res_unet',in_channels=1,classes=2)
-    # net = res_unet('swinplusr18_res_unet',in_channels=1,classes=2)
+    # net = res_unet('res_unet',encoder_name='simplenet',in_channels=1,classes=2)
+    net = res_unet('res_unet',encoder_name='resnet18',in_channels=1,classes=2)
+    # net = res_unet('res_unet',encoder_name='swinplusr18',in_channels=1,classes=2)
 
     #deeplabv3+
-    net = deeplabv3plus('swinplusr18_deeplabv3+',in_channels=1,classes=2)
+    # net = deeplabv3plus('deeplabv3+',encoder_name='swinplusr18',in_channels=1,classes=2)
 
     summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     
@@ -40,8 +38,5 @@ if __name__ == '__main__':
     # output = net(input)
     # print(output.size())
     
-
-    import sys
-    sys.path.append('..')
     from utils import count_params_and_macs
     count_params_and_macs(net.cuda(),(1,1,512,512))

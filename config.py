@@ -7,11 +7,11 @@ from utils import get_weight_path
 
 __disease__ = ['TMLI','TMLI_UP']
 __cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet',]
-__trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet','swin_trans_unet']
-__encoder_name__ = [None,'resnet18','resnet34','resnet50','se_resnet50', \
+__trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
+__encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
-                    'efficientnet-b4', 'efficientnet-b5','efficientnet-b6','efficientnet-b7']
-
+                    'efficientnet-b4', 'efficientnet-b5']
+__new_encoder_name__ = ['swin_transformer','swinplusr18']
 __mode__ = ['cls','seg','mtl']
 
 
@@ -22,9 +22,9 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'SwinUNet'
-ENCODER_NAME = None
-VERSION = 'v11.0'
+NET_NAME = 'unet'
+ENCODER_NAME = 'swinplusr18'
+VERSION = 'v1.12'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)

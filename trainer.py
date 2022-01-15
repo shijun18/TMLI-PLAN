@@ -10,6 +10,7 @@
 
 # here put the import lib
 
+from curses import echo
 import os
 import torch
 import torch.nn as nn
@@ -624,9 +625,9 @@ class SemanticSeg(object):
 
     def _get_net(self, net_name):
         if net_name == 'unet':
-            if self.encoder_name is None:
+            if self.encoder_name in ['simplenet','swin_transformer','swinplusr18']:
                 from model.unet import unet
-                net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
+                net = unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.Unet(
@@ -667,10 +668,9 @@ class SemanticSeg(object):
                 )
         
         elif net_name == 'deeplabv3+':
-            if self.encoder_name is None:
-                raise ValueError(
-                    "encoder name must not be 'None'!"
-                )
+            if self.encoder_name in ['swinplusr18']:
+                from model.deeplabv3plus import deeplabv3plus
+                net = deeplabv3plus(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.DeepLabV3Plus(
@@ -680,27 +680,15 @@ class SemanticSeg(object):
                     classes=self.num_classes,                     
                     aux_params={"classes":self.num_classes-1} 
                 )
-        elif 'res_unet' in net_name:
+        elif net_name == 'res_unet':
             from model.res_unet import res_unet
-            net = res_unet(net_name,in_channels=self.channels,classes=self.num_classes)
+            net = res_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
         
-        elif 'att_unet' in net_name:
+        elif net_name == 'att_unet':
             from model.att_unet import att_unet
-            net = att_unet(net_name,in_channels=self.channels,classes=self.num_classes)
+            net = att_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
 
-        ## transformer + U-like net
-        elif net_name in ['swin_trans_unet','swinplusr18_unet']:
-            from model.unet import unet
-            net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
-
-        elif net_name in ['resnet18_res_unet','swinplusr18_res_unet']:
-            from model.res_unet import res_unet
-            net = res_unet(net_name,in_channels=self.channels,classes=self.num_classes)
-
-        elif net_name in ['swinplusr18_deeplabv3+']:
-            from model.deeplabv3plus import deeplabv3plus
-            net = deeplabv3plus(net_name,in_channels=self.channels,classes=self.num_classes)
-
+        ## external transformer + U-like net
         elif net_name == 'UTNet':
             from model.trans_model.utnet import UTNet
             net = UTNet(self.channels, base_chan=32,num_classes=self.num_classes, reduce_size=8, block_list='1234', num_blocks=[1,1,1,1], num_heads=[4,4,4,4], projection='interp', attn_drop=0.1, proj_drop=0.1, rel_pos=True, aux_loss=False, maxpool=True)
