@@ -211,7 +211,15 @@ class ResNet(nn.Module):
         x = self.fc(x)
 
         return out_x
-
+    
+    def get_stages(self):
+        return [
+            nn.Sequential(self.conv1, self.bn1, self.relu),
+            nn.Sequential(self.maxpool, self.layer1),
+            self.layer2,
+            self.layer3,
+            self.layer4,
+        ]
 
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)

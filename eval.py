@@ -196,6 +196,7 @@ if __name__ == '__main__':
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
     # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
     sample_list = ['202398', '202774', '202610', '20210811', '202563', '202818', '202397', '202899', '202414', '202561']
+    sample_list.sort()
     start = time.time()
     config = Config()
     

@@ -595,6 +595,15 @@ class SwinTransformer(nn.Module):
         self._freeze_stages()
 
 
+    def get_stages(self):
+        stages = []
+        for i in range(self.num_layers):
+            if i in self.out_indices:
+                stages.append(self.layers[i])
+        return stages
+
+
+        
 
 DEFAULT_CONFIG = dict(
     pretrain_img_size=512,

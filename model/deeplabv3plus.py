@@ -1,3 +1,4 @@
+from model.encoder.resnet import conv1x1
 import torch.nn as nn
 from typing import Optional, Union, List
 from .model_config import MODEL_CONFIG
@@ -71,24 +72,21 @@ class DeepLabV3Plus(SegmentationModel):
         )
 
         if encoder_output_stride == 8:
-            self.encoder.make_dilated(
+            self.make_dilated(
                 stage_list=[3, 4],
                 dilation_list=[2, 4]
             )
 
         elif encoder_output_stride == 16:
-            self.encoder.make_dilated(
+            self.make_dilated(
                 stage_list=[4],
                 dilation_list=[2]
             )
         elif encoder_output_stride == 32:
-            self.encoder.make_dilated(
-                stage_list=[4],
-                dilation_list=[2]
-            )
+            pass
         else:
             raise ValueError(
-                "Encoder output stride should be 8 or 16, got {}".format(encoder_output_stride)
+                "Encoder output stride should be 8 or 16 or 32, got {}".format(encoder_output_stride)
             )
 
         self.decoder = DeepLabV3PlusDecoder(
@@ -117,7 +115,7 @@ class DeepLabV3Plus(SegmentationModel):
         self.initialize()
     
     def make_dilated(self, stage_list, dilation_list):
-        stages = self.get_stages()
+        stages = self.encoder.get_stages()
         for stage_indx, dilation_rate in zip(stage_list, dilation_list):
             self.replace_strides_with_dilation(
                 module=stages[stage_indx],
@@ -137,3 +135,15 @@ class DeepLabV3Plus(SegmentationModel):
                 # Kostyl for EfficientNet
                 if hasattr(mod, "static_padding"):
                     mod.static_padding = nn.Identity()
+
+
+
+def deeplabv3plus(model_name,**kwargs):
+    params = MODEL_CONFIG[model_name]
+    dynamic_params = kwargs
+    for key in dynamic_params:
+        if key in params:
+            params[key] = dynamic_params[key]
+
+    net = DeepLabV3Plus(**params)
+    return net

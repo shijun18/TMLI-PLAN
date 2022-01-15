@@ -49,6 +49,7 @@ class TransPlusConv(nn.Module):
         self.conv_num_features = conv_num_features
         
         assert len(self.conv_num_features) >= len(self.trans_num_features)
+        self.depth = len(self.trans_num_features)
         self.offset = len(self.conv_num_features) - len(self.trans_num_features)
         self.conv_num_features = self.conv_num_features[self.offset:]
         fusion_layer = []
@@ -76,6 +77,13 @@ class TransPlusConv(nn.Module):
 
         return out_x
 
+    def get_stages(self):
+        stages = []
+        for i in range(self.offset):
+            stages.append(nn.Identity())
+        for i in range(self.depth):
+            stages.append(self.fusion_layer[i])
+        return stages
 
 
 def swinplusr18(**kwargs):
@@ -86,3 +94,18 @@ def swinplusr18(**kwargs):
     return model
 
 
+def swinplusr34(**kwargs):
+    model = TransPlusConv(trans_encoder='swin_transformer',
+                        conv_encoder='resnet34',
+                        conv_num_features=[64,64,128,256,512],
+                        **kwargs)
+    return model
+
+
+
+def swinplusr34(**kwargs):
+    model = TransPlusConv(trans_encoder='swin_transformer',
+                        conv_encoder='resnet50',
+                        conv_num_features=[64,256,512,1024,2048],
+                        **kwargs)
+    return model

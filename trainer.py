@@ -688,24 +688,18 @@ class SemanticSeg(object):
             from model.att_unet import att_unet
             net = att_unet(net_name,in_channels=self.channels,classes=self.num_classes)
 
-        ## transformer + Unet
-        elif net_name == 'swin_trans_unet':
-            if self.encoder_name is not None:
-                raise ValueError(
-                    "encoder name must be 'None'!"
-                )
-            else:
-                from model.unet import unet
-                net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
+        ## transformer + U-like net
+        elif net_name in ['swin_trans_unet','swinplusr18_unet']:
+            from model.unet import unet
+            net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
 
-        elif net_name.startswith('swinplus'):
-            if self.encoder_name is not None:
-                raise ValueError(
-                    "encoder name must be 'None'!"
-                )
-            else:
-                from model.unet import unet
-                net = unet(net_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
+        elif net_name in ['resnet18_res_unet','swinplusr18_res_unet']:
+            from model.res_unet import res_unet
+            net = res_unet(net_name,in_channels=self.channels,classes=self.num_classes)
+
+        elif net_name in ['swinplusr18_deeplabv3+']:
+            from model.deeplabv3plus import deeplabv3plus
+            net = deeplabv3plus(net_name,in_channels=self.channels,classes=self.num_classes)
 
         elif net_name == 'UTNet':
             from model.trans_model.utnet import UTNet

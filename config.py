@@ -29,16 +29,16 @@ VERSION = 'v11.0'
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '2,3'
+DEVICE = '6,7'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
-PRE_TRAINED = False
+PRE_TRAINED = True
 # True if use external pre-trained model 
 EX_PRE_TRAINED = True if 'pretrain' in VERSION else False
 # True if use resume model
 CKPT_POINT = False
 # [1-N]
-CURRENT_FOLD = 5
+CURRENT_FOLD = 1
 GPU_NUM = len(DEVICE.split(','))
 FOLD_NUM = 5
 
@@ -68,7 +68,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (448,448)
-BATCH_SIZE = 16
+BATCH_SIZE = 20
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
@@ -79,7 +79,7 @@ INIT_TRAINER = {
   'net_name':NET_NAME,
   'encoder_name':ENCODER_NAME,
   'lr':1e-3, 
-  'n_epoch':120,
+  'n_epoch':150,
   'channels':1,
   'num_classes':NUM_CLASSES, 
   'roi_number':ROI_NUMBER,
@@ -113,7 +113,7 @@ __mtl_loss__ = ['BCEPlusDice']
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'TopKLoss' if ROI_NUMBER is None else 'TopkCEPlusDice' #'CEPlusDice'  'TopKLoss'
+    LOSS_FUN = 'TopkCEPlusDice' if ROI_NUMBER is None else 'TopKLoss' #'CEPlusDice'  'TopKLoss'
 else:
     LOSS_FUN = 'BCEPlusDice'
 

@@ -122,7 +122,14 @@ class SimpleNet(nn.Module):
 
         return out_x
 
-
+    def get_stages(self):
+        return [
+            self.inc,
+            self.down1,
+            self.down2,
+            self.down3,
+            self.down4
+        ]
 
 def simplenet(**kwargs):
     return SimpleNet(down=Down2D,

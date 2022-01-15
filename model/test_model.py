@@ -3,6 +3,7 @@ sys.path.append('..')
 from model.unet import unet
 from model.att_unet import att_unet
 from model.res_unet import res_unet
+from model.deeplabv3plus import deeplabv3plus
 
 if __name__ == '__main__':
 
@@ -19,14 +20,18 @@ if __name__ == '__main__':
 
     # att unet
     # net = att_unet('resnet18_att_unet',in_channels=1,classes=2)
-    net = att_unet('att_unet',in_channels=1,classes=2)
+    # net = att_unet('att_unet',in_channels=1,classes=2)
     # net = att_unet('swin_trans_att_unet',in_channels=1,classes=2)
 
     # res unet
     # net = res_unet('resnet18_res_unet',in_channels=1,classes=2)
     # net = res_unet('res_unet',in_channels=1,classes=2)
     # net = res_unet('swin_trans_res_unet',in_channels=1,classes=2)
-      
+    net = res_unet('swinplusr18_res_unet',in_channels=1,classes=2)
+
+    #deeplabv3+
+    # net = deeplabv3plus('swinplusr18_res_unet',in_channels=1,classes=2)
+
     summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     
     # net = net.cuda()
