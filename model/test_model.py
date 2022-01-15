@@ -10,7 +10,7 @@ if __name__ == '__main__':
     from torchsummary import summary
     import torch
     import os 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '6'
 
     # unet
     # net = unet('resnet18_unet',in_channels=1,classes=2)
@@ -27,10 +27,10 @@ if __name__ == '__main__':
     # net = res_unet('resnet18_res_unet',in_channels=1,classes=2)
     # net = res_unet('res_unet',in_channels=1,classes=2)
     # net = res_unet('swin_trans_res_unet',in_channels=1,classes=2)
-    net = res_unet('swinplusr18_res_unet',in_channels=1,classes=2)
+    # net = res_unet('swinplusr18_res_unet',in_channels=1,classes=2)
 
     #deeplabv3+
-    # net = deeplabv3plus('swinplusr18_res_unet',in_channels=1,classes=2)
+    net = deeplabv3plus('swinplusr18_deeplabv3+',in_channels=1,classes=2)
 
     summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     

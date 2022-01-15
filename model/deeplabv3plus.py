@@ -98,7 +98,7 @@ class DeepLabV3Plus(SegmentationModel):
 
         self.segmentation_head = nn.Sequential(
             nn.UpsamplingBilinear2d(scale_factor=upsampling) if upsampling > 1 else nn.Identity(),
-            nn.Conv2d(decoder_channels[-1], classes, kernel_size=3, padding=1)
+            nn.Conv2d(decoder_channels, classes, kernel_size=3, padding=1)
         )
 
         if aux_classifier:
