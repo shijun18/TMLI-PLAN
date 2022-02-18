@@ -111,7 +111,7 @@ def get_weight_path(ckpt_path):
     if os.path.isdir(ckpt_path):
         pth_list = os.listdir(ckpt_path)
         if len(pth_list) != 0:
-            pth_list.sort(key=lambda x:int(x.split('-')[0].split(':')[-1]))
+            pth_list.sort(key=lambda x:int(x.split('-')[0].split('=')[-1]))
             return os.path.join(ckpt_path,pth_list[-1])
         else:
             return None
@@ -125,7 +125,7 @@ def remove_weight_path(ckpt_path,retain=3):
     if os.path.isdir(ckpt_path):
         pth_list = os.listdir(ckpt_path)
         if len(pth_list) >= retain:
-            pth_list.sort(key=lambda x:int(x.split('-')[0].split(':')[-1]))
+            pth_list.sort(key=lambda x:int(x.split('-')[0].split('=')[-1]))
             for pth_item in pth_list[:-retain]:
                 os.remove(os.path.join(ckpt_path,pth_item))
 
@@ -138,7 +138,29 @@ def dfs_remove_weight(ckpt_path,retain=3):
             remove_weight_path(ckpt_path,retain)
             break  
 
+def rename_weight_path(ckpt_path):
+    if os.path.isdir(ckpt_path):
+        for pth in os.scandir(ckpt_path):
+            if ':' in pth.name:
+                new_pth = pth.path.replace(':','=')
+                print(pth.name,' >>> ',os.path.basename(new_pth))
+                os.rename(pth.path,new_pth)
+            else:
+                break
+
+
+def dfs_rename_weight(ckpt_path):
+    for sub_path in os.scandir(ckpt_path):
+        if sub_path.is_dir():
+            dfs_rename_weight(sub_path.path)
+        else:
+            rename_weight_path(ckpt_path)
+            break  
+
 if __name__ == "__main__":
 
-    ckpt_path = './ckpt/TMLI_UP/seg/v9.0/All/fold1/'
-    dfs_remove_weight(ckpt_path)
+    # ckpt_path = './ckpt/TMLI_UP/seg/v9.0/All/fold1/'
+    # dfs_remove_weight(ckpt_path)
+
+    ckpt_path = './ckpt/'
+    dfs_rename_weight(ckpt_path)

@@ -300,7 +300,7 @@ class SemanticSeg(object):
                     # 'optimizer': optimizer.state_dict()
                 }
 
-                file_name = 'epoch:{}-train_loss:{:.5f}-train_dice:{:.5f}-train_run_dice:{:.5f}-train_acc:{:.5f}-val_loss:{:.5f}-val_dice:{:.5f}-val_run_dice:{:.5f}-val_acc:{:.5f}.pth'.format(
+                file_name = 'epoch={}-train_loss={:.5f}-train_dice={:.5f}-train_run_dice={:.5f}-train_acc={:.5f}-val_loss={:.5f}-val_dice={:.5f}-val_run_dice={:.5f}-val_acc={:.5f}.pth'.format(
                     epoch, train_loss, train_dice, train_run_dice,train_acc, val_loss,val_dice,val_run_dice,val_acc)
                 
                 save_path = os.path.join(output_dir, file_name)
