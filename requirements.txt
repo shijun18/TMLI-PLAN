@@ -1,6 +1,5 @@
 h5py
 monai
-Pillow
 einops
 tqdm
 timm
@@ -9,6 +8,7 @@ torchsummary
 thop
 scipy
 scikit-image
+tensorboardX
+transforms3d
 opencv-python
-pydicom
-SimpleITK
+sklearn
