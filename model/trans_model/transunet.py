@@ -315,7 +315,7 @@ class Embeddings(nn.Module):
 
             features = None
 
-        x = self.patch_embeddings(x)  # (B, hidden. n_patches^(1/2), n_patches^(1/2))
+        x = self.patch_embeddings(x)  # (B, hidden, n_patches^(1/2), n_patches^(1/2))
 
         x = x.flatten(2)
 

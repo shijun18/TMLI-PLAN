@@ -103,7 +103,7 @@ def swinplusr34(**kwargs):
 
 
 
-def swinplusr34(**kwargs):
+def swinplusr50(**kwargs):
     model = TransPlusConv(trans_encoder='swin_transformer',
                         conv_encoder='resnet50',
                         conv_num_features=[64,256,512,1024,2048],
