@@ -77,9 +77,10 @@ class RandomTranslationRotationZoom3D(object):
             temp = warp((label == z).astype(np.float32),warp_coords)
             new_label[temp >= 0.5] = z
         label = new_label   
-        new_sample = {'image': image, 'mask': label}
 
-        return new_sample
+        sample['image'] = image
+        sample['mask'] = label
+        return sample
 
 
 class RandomFlip3D(object):
@@ -123,6 +124,6 @@ class RandomFlip3D(object):
         # avoid the discontinuity of array memory
         image = image.copy()
         label = label.copy()
-        new_sample = {'image': image, 'mask': label}
-
-        return new_sample
+        sample['image'] = image
+        sample['mask'] = label
+        return sample

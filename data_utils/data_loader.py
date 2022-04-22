@@ -21,8 +21,6 @@ class Trunc_and_Normalize(object):
 
     def __call__(self, sample):
         image = sample['image']
-        mask = sample['mask']
-
         # gray truncation
         image = image - self.scale[0]
         gray_range = self.scale[1] - self.scale[0]
@@ -31,9 +29,8 @@ class Trunc_and_Normalize(object):
 
         image = image / gray_range
 
-        new_sample = {'image': image, 'mask': mask}
-
-        return new_sample
+        sample['image'] = image
+        return sample
 
 
 class CropResize(object):
@@ -72,9 +69,9 @@ class CropResize(object):
                 temp_mask[roi >= 0.5] = z
             mask = temp_mask
 
-        new_sample = {'image': image, 'mask': mask}
-
-        return new_sample
+        sample['image'] = image
+        sample['mask'] = mask
+        return sample
 
 
 class To_Tensor(object):
@@ -99,12 +96,9 @@ class To_Tensor(object):
             new_mask[z, ...] = temp
         new_mask[0,...] = np.amax(new_mask[1:, ...],axis=0) == 0
         # convert to Tensor
-        new_sample = {
-            'image': torch.from_numpy(new_image),
-            'mask': torch.from_numpy(new_mask)
-        }
-
-        return new_sample
+        sample['image'] =  torch.from_numpy(new_image)
+        sample['mask'] = torch.from_numpy(new_mask)
+        return sample
 
 
 class DataGenerator(Dataset):

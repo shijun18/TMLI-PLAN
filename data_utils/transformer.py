@@ -9,6 +9,8 @@ import cv2
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 
+from skimage.exposure.exposure import rescale_intensity
+from skimage.draw import polygon
 
 class RandomErase2D(object):
     '''
@@ -62,12 +64,9 @@ class RandomErase2D(object):
             elif direction == 'r':
                 image[:,roi_window[1][1]:] = 0
 
-        new_sample = {'image': image, 'mask': mask}
-
-        return new_sample
-
-
-
+        sample['image'] = image
+        sample['mask'] = mask
+        return sample
 
 
 class RandomFlip2D(object):
@@ -114,9 +113,9 @@ class RandomFlip2D(object):
             
         image = np.array(image).astype(np.float32)
         mask = np.array(mask).astype(np.float32)
-        new_sample = {'image': image, 'mask': mask}
-
-        return new_sample
+        sample['image'] = image
+        sample['mask'] = mask
+        return sample
 
 
 class RandomRotate2D(object):
@@ -145,7 +144,10 @@ class RandomRotate2D(object):
 
         image = np.array(image).astype(np.float32)
         mask = np.array(mask).astype(np.float32)
-        return {'image': image, 'mask': mask}
+        sample['image'] = image
+        sample['mask'] = mask
+        return sample
+
 
 
 class RandomZoom2D(object):
@@ -217,7 +219,9 @@ class RandomZoom2D(object):
 
         image = np.array(image).astype(np.float32)
         mask = np.array(mask).astype(np.float32)
-        return {'image': image, 'mask': mask}
+        sample['image'] = image
+        sample['mask'] = mask
+        return sample
 
 
 
@@ -347,3 +351,58 @@ class RandomDistort2D(object):
             sample['mask']  = distorted_img[...,1]
 
         return sample
+
+
+class Get_ROI(object):
+    def __init__(self, keep_size=12):
+        self.keep_size = keep_size
+    
+    def __call__(self, sample):
+        '''
+        sample['image'] must be scaled to (0~1)
+        '''
+        image = sample['image']
+        mask = sample['mask']
+
+        h,w = image.shape
+        roi = self.get_body(image)
+
+        roi_nz = np.nonzero(roi)
+        roi_bbox = [
+            np.maximum((np.amin(roi_nz[0]) - self.keep_size), 0), # left_top x
+            np.maximum((np.amin(roi_nz[1]) - self.keep_size), 0), # left_top y
+            np.minimum((np.amax(roi_nz[0]) + self.keep_size), h), # right_bottom x
+            np.minimum((np.amax(roi_nz[1]) + self.keep_size), w)  # right_bottom y
+        ]
+
+        image = image[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]
+        mask = mask[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]
+
+        sample['image'] = image
+        sample['mask'] = mask
+        sample['bbox'] = roi_bbox
+        return sample
+    
+    def get_body(self,image):
+        body_array = np.zeros_like(image, dtype=np.uint8)
+        img = rescale_intensity(image, out_range=(0, 255))
+        img = img.astype(np.uint8)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        body = cv2.erode(img, kernel, iterations=1)
+        blur = cv2.GaussianBlur(body, (5, 5), 0)
+        _, body = cv2.threshold(blur, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        body = cv2.morphologyEx(body, cv2.MORPH_CLOSE, kernel, iterations=3)
+        contours, _ = cv2.findContours(body, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        area = [[c, cv2.contourArea(contours[c])] for c in range(len(contours))]
+        area.sort(key=lambda x: x[1], reverse=True)
+        body = np.zeros_like(body, dtype=np.uint8)
+        for j in range(min(len(area),3)):
+            if area[j][1] > area[0][1] / 20:
+                contour = contours[area[j][0]]
+                r = contour[:, 0, 1]
+                c = contour[:, 0, 0]
+                rr, cc = polygon(r, c)
+                body[rr, cc] = 1
+        body_array = cv2.medianBlur(body, 5)
+
+        return body_array
