@@ -354,8 +354,9 @@ class RandomDistort2D(object):
 
 
 class Get_ROI(object):
-    def __init__(self, keep_size=12):
+    def __init__(self, keep_size=12,pad_flag=False):
         self.keep_size = keep_size
+        self.pad_flag = pad_flag
     
     def __call__(self, sample):
         '''
@@ -377,6 +378,17 @@ class Get_ROI(object):
 
         image = image[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]
         mask = mask[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]
+
+        # pad
+        if self.pad_flag:
+            nh, nw = roi_bbox[2] - roi_bbox[0], roi_bbox[3] - roi_bbox[1]
+            if abs(nh - nw) > 1:
+                if nh > nw:
+                    pad = ((0,0),(int(nh-nw)//2,int(nh-nw)//2))
+                else:
+                    pad = ((int(nw-nh)//2,int(nw-nh)//2),(0,0))
+                image = np.pad(image,pad,'constant')
+                mask = np.pad(mask,pad,'constant')
 
         sample['image'] = image
         sample['mask'] = mask
