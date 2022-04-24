@@ -368,13 +368,16 @@ class Get_ROI(object):
         h,w = image.shape
         roi = self.get_body(image)
 
-        roi_nz = np.nonzero(roi)
-        roi_bbox = [
-            np.maximum((np.amin(roi_nz[0]) - self.keep_size), 0), # left_top x
-            np.maximum((np.amin(roi_nz[1]) - self.keep_size), 0), # left_top y
-            np.minimum((np.amax(roi_nz[0]) + self.keep_size), h), # right_bottom x
-            np.minimum((np.amax(roi_nz[1]) + self.keep_size), w)  # right_bottom y
-        ]
+        if np.sum(roi) != 0:
+            roi_nz = np.nonzero(roi)
+            roi_bbox = [
+                np.maximum((np.amin(roi_nz[0]) - self.keep_size), 0), # left_top x
+                np.maximum((np.amin(roi_nz[1]) - self.keep_size), 0), # left_top y
+                np.minimum((np.amax(roi_nz[0]) + self.keep_size), h), # right_bottom x
+                np.minimum((np.amax(roi_nz[1]) + self.keep_size), w)  # right_bottom y
+            ]
+        else:
+            roi_bbox = [0,0,h,w]
 
         image = image[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]
         mask = mask[roi_bbox[0]:roi_bbox[2],roi_bbox[1]:roi_bbox[3]]

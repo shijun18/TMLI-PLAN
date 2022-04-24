@@ -73,6 +73,7 @@ class SemanticSeg(object):
                  ex_pre_trained=False,
                  ckpt_point=True,
                  weight_path=None,
+                 use_moco=None,
                  weight_decay=0.,
                  momentum=0.95,
                  gamma=0.1,
@@ -101,6 +102,7 @@ class SemanticSeg(object):
         self.ex_pre_trained = ex_pre_trained 
         self.ckpt_point = ckpt_point
         self.weight_path = weight_path
+        self.use_moco = use_moco
 
         self.start_epoch = 0
         self.global_step = 0
@@ -140,7 +142,8 @@ class SemanticSeg(object):
                 optimizer='Adam',
                 loss_fun='Cross_Entropy',
                 class_weight=None,
-                lr_scheduler=None):
+                lr_scheduler=None,
+                freeze_encoder=False):
 
         torch.manual_seed(1000)
         np.random.seed(1000)
@@ -173,6 +176,10 @@ class SemanticSeg(object):
             len(train_path[0]) / self.batch_size)
 
         net = self.net
+
+        if freeze_encoder:
+            for param in net.encoder.parameters():
+                param.requires_grad = False
 
         # only for deeplab
         if self.freeze is not None and 'deeplab' in self.net_name:
@@ -627,7 +634,12 @@ class SemanticSeg(object):
         if net_name == 'unet':
             if self.encoder_name in ['simplenet','swin_transformer','swinplusr18']:
                 from model.unet import unet
-                net = unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
+                net = unet(net_name,
+                encoder_name=self.encoder_name,
+                encoder_weights=self.use_moco,
+                in_channels=self.channels,
+                classes=self.num_classes,
+                aux_classifier=True)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.Unet(
@@ -670,7 +682,11 @@ class SemanticSeg(object):
         elif net_name == 'deeplabv3+':
             if self.encoder_name in ['swinplusr18']:
                 from model.deeplabv3plus import deeplabv3plus
-                net = deeplabv3plus(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
+                net = deeplabv3plus(net_name,
+                encoder_name=self.encoder_name,
+                encoder_weights=self.use_moco,
+                in_channels=self.channels,
+                classes=self.num_classes)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.DeepLabV3Plus(
@@ -682,11 +698,19 @@ class SemanticSeg(object):
                 )
         elif net_name == 'res_unet':
             from model.res_unet import res_unet
-            net = res_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
+            net = res_unet(net_name,
+            encoder_name=self.encoder_name,
+            encoder_weights=self.use_moco,
+            in_channels=self.channels,
+            classes=self.num_classes)
         
         elif net_name == 'att_unet':
             from model.att_unet import att_unet
-            net = att_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
+            net = att_unet(net_name,
+            encoder_name=self.encoder_name,
+            encoder_weights=self.use_moco,
+            in_channels=self.channels,
+            classes=self.num_classes)
 
         ## external transformer + U-like net
         elif net_name == 'UTNet':

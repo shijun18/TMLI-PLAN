@@ -4,6 +4,9 @@ import torch.nn.functional as F
 from . import resnet,swin_transformer,simplenet
 
 
+moco_weight_path = {
+    'resnet18':'/staff/shijun/torch_projects/Med_Seg/moco/convert_ckpt/moco_v2/resnet18/v1.0-x5/convert_epoch=0174-loss=0.537353-top1=98.037689.pth.tar'
+}
 
 def build_encoder(arch='resnet18', weights=None, **kwargs):
         
@@ -17,11 +20,14 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
         backbone = simplenet.__dict__[arch](**kwargs)
     else:
         raise Exception('Architecture undefined!')
-
-    if weights is not None and isinstance(weights, str):
+        
+    if weights is not None and isinstance(moco_weight_path[arch], str):
         print('Loading weights for backbone')
-        backbone.load_state_dict(
-            torch.load(weights, map_location=lambda storage, loc: storage), strict=False)
+        msg = backbone.load_state_dict(
+            torch.load(moco_weight_path[arch], map_location=lambda storage, loc: storage)['state_dict'], strict=False)
+        if arch.startswith('resnet'):
+            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+            print(">>>> loaded pre-trained model '{}' ".format(moco_weight_path[arch]))
     
     return backbone
 

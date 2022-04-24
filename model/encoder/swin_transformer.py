@@ -458,10 +458,11 @@ class SwinTransformer(nn.Module):
     """
 
     def __init__(self,
-                 pretrain_img_size=224,
+                 img_size=224,
                  patch_size=4,
                  n_channels=3,
                  embed_dim=96,
+                 num_classes=2,
                  depths=[2, 2, 6, 2],
                  num_heads=[3, 6, 12, 24],
                  window_size=7,
@@ -479,7 +480,7 @@ class SwinTransformer(nn.Module):
                  use_checkpoint=False):
         super().__init__()
 
-        self.pretrain_img_size = pretrain_img_size
+        self.img_size = img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
         self.ape = ape
@@ -494,9 +495,9 @@ class SwinTransformer(nn.Module):
 
         # absolute position embedding
         if self.ape:
-            pretrain_img_size = to_2tuple(pretrain_img_size)
+            img_size = to_2tuple(img_size)
             patch_size = to_2tuple(patch_size)
-            patches_resolution = [pretrain_img_size[0] // patch_size[0], pretrain_img_size[1] // patch_size[1]]
+            patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
 
             self.absolute_pos_embed = nn.Parameter(torch.zeros(1, embed_dim, patches_resolution[0], patches_resolution[1]))
             trunc_normal_(self.absolute_pos_embed, std=.02)
@@ -528,6 +529,9 @@ class SwinTransformer(nn.Module):
         num_features = [int(embed_dim * 2 ** i) for i in range(self.num_layers)]
         self.num_features = num_features
 
+        # self.norm = norm_layer(self.num_features[-1])
+        # self.avgpool = nn.AdaptiveAvgPool1d(1)
+        # self.fc = nn.Linear(self.num_features[-1], num_classes) if num_classes > 0 else nn.Identity()
         # add a norm layer for each output
         for i_layer in out_indices:
             layer = norm_layer(num_features[i_layer])
@@ -579,7 +583,6 @@ class SwinTransformer(nn.Module):
         for i in range(self.num_layers):
             layer = self.layers[i]
             x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
-
             if i in self.out_indices:
                 norm_layer = getattr(self, f'norm{i}')
                 x_out = norm_layer(x_out)
@@ -606,9 +609,10 @@ class SwinTransformer(nn.Module):
         
 
 DEFAULT_CONFIG = dict(
-    pretrain_img_size=512,
+    img_size=512,
     patch_size=4,
     n_channels=3,
+    num_classes=2,
     embed_dim=96,
     depths=[2, 2, 6, 2],
     num_heads=[3, 6, 12, 24],
@@ -640,7 +644,7 @@ if __name__ == '__main__':
     import os 
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
-    net = swin_transformer(1)
+    net = swin_transformer(n_channels=1)
     net = net.cuda()
     net.train()
     input = torch.randn((1,1,512,512)).cuda()

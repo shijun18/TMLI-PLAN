@@ -6,16 +6,39 @@ import pandas as pd
 from tqdm import tqdm
 import json
 import re
+import difflib
 
+def has_annotation_fuzzy(annotation, annotation_list):
+    sim_list = []
+    for anno in annotation_list:
+        sim = difflib.SequenceMatcher(None, annotation, anno).quick_ratio()
+        sim_list.append(sim)
+    if np.max(sim_list) > 0.9:
+        return True, np.argmax(sim_list)
+    else:
+        return False, -1
 
 def has_annotation(annotation, annotation_list):
     annotation_list = [re.sub(r'[\s]*','',case.lower()) for case in annotation_list]
     annotation = re.sub(r'[\s]*','',annotation.lower())
-    if annotation in annotation_list:
-        return True, annotation_list.index(annotation)
+    # more
+    # annotation_list = [case.replace('_','').replace('-','') for case in annotation_list]
+    # annotation = annotation.replace('_','').replace('-','')
+    if len(annotation_list) == 1:
+        if annotation in annotation_list:
+            return True, annotation_list.index(annotation)
+        else:
+            return False, -1
     else:
-        return False, -1
+        return has_annotation_fuzzy(annotation,annotation_list)
 
+# def has_annotation(annotation, annotation_list):
+#     annotation_list = [re.sub(r'[\s]*','',case.lower()) for case in annotation_list]
+#     annotation = re.sub(r'[\s]*','',annotation.lower())
+#     if annotation in annotation_list:
+#         return True, annotation_list.index(annotation)
+#     else:
+#         return False, -1
 
 # CT and RT in different folders
 def annotation_check(input_path, save_path, annotation_list):
@@ -79,7 +102,8 @@ def annotation_check(input_path, save_path, annotation_list):
 
 if __name__ == "__main__":
     # json_file = './static_files/TMLI_config.json'
-    json_file = './static_files/TMLI_config_v2.json'
+    # json_file = './static_files/TMLI_config_up_v2.json'
+    json_file = './static_files/TMLI_Total.json'
     with open(json_file, 'r') as fp:
         info = json.load(fp)
     annotation_check(info['dicom_path'], info['annotation_path'],info['annotation_list'])

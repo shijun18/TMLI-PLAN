@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-from torchvision.models.utils import load_state_dict_from_url
+from torch.hub import load_state_dict_from_url
 from model.lib import SynchronizedBatchNorm2d
 BatchNorm2d = SynchronizedBatchNorm2d
 

@@ -93,6 +93,7 @@ INIT_TRAINER = {
   'ex_pre_trained':EX_PRE_TRAINED,
   'ckpt_point':CKPT_POINT,
   'weight_path':WEIGHT_PATH,
+  'use_moco':None if 'moco' not in VERSION else 'moco',
   'weight_decay': 0.0001,
   'momentum': 0.99,
   'gamma': 0.1,
@@ -124,6 +125,7 @@ SETUP_TRAINER = {
   'loss_fun':LOSS_FUN,
   'class_weight':None, #[1,4]
   'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
+  'freeze_encoder':False
   }
 #---------------------------------
 TEST_PATH = None
