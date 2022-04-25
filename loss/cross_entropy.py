@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
@@ -11,21 +12,10 @@ class CrossentropyLoss(torch.nn.CrossEntropyLoss):
         target = target.long()
         num_classes = inp.size()[1]
 
-        i0 = 1
-        i1 = 2
-        # this is ugly but torch only allows to transpose two axes at once
-        while i1 < len(inp.shape): 
-            inp = inp.transpose(i0, i1)
-            i0 += 1
-            i1 += 1
-
-        inp = inp.contiguous()
-        inp = inp.view(-1, num_classes)
-
+        inp = inp.permute(0, 2, 3, 1).contiguous().view(-1, num_classes)
         target = target.view(-1,)
 
         return super(CrossentropyLoss, self).forward(inp, target)
-
 
 
 
@@ -63,3 +53,23 @@ class DynamicTopKLoss(CrossentropyLoss):
             self.k -= 1
         
         return res.mean()
+
+
+class OhemCELoss(nn.Module):
+
+    def __init__(self, thresh=0.7, ignore_lb=-100):
+        super(OhemCELoss, self).__init__()
+        self.thresh = -torch.log(torch.tensor(thresh, requires_grad=False, dtype=torch.float)).cuda()
+        self.ignore_lb = ignore_lb
+        self.criteria = nn.CrossEntropyLoss(ignore_index=ignore_lb, reduction='none')
+
+    def forward(self, logits, labels):
+        if len(labels.size()) > 3:
+            labels = torch.argmax(labels,1)
+        labels = labels.long()
+        n_min = labels[labels != self.ignore_lb].numel() // 16
+        loss = self.criteria(logits, labels).view(-1)
+        loss_hard = loss[loss > self.thresh]
+        if loss_hard.numel() < n_min:
+            loss_hard, _ = loss.topk(n_min)
+        return torch.mean(loss_hard)

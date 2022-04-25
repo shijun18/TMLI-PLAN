@@ -763,6 +763,10 @@ class SemanticSeg(object):
             from loss.cross_entropy import TopKLoss
             loss = TopKLoss(weight=class_weight, k=self.topk)
         
+        elif loss_fun == 'OHEM':
+            from loss.cross_entropy import OhemCELoss
+            loss = OhemCELoss(thresh=0.7)
+
         elif loss_fun == 'DiceLoss':
             from loss.dice_loss import DiceLoss
             loss = DiceLoss(weight=class_weight, ignore_index=0, p=1)

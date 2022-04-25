@@ -6,7 +6,7 @@ from utils import get_path_with_annotation,get_path_with_annotation_ratio
 from utils import get_weight_path
 
 __disease__ = ['TMLI','TMLI_UP']
-__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet',]
+__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet','bisenetv1']
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
@@ -106,7 +106,7 @@ INIT_TRAINER = {
  }
 #---------------------------------
 
-__seg_loss__ = ['DiceLoss','TopKLoss','CEPlusDice','TopkCEPlusDice','DynamicTopkCEPlusDice','DynamicTopKLoss','TopkCEPlusShiftDice','CEPlusTopkDice','TopkCEPlusTopkDice','PowDiceLoss','Cross_Entropy','TopkDiceLoss']
+__seg_loss__ = ['DiceLoss','TopKLoss','CEPlusDice','OHEM','TopkCEPlusDice','DynamicTopkCEPlusDice','DynamicTopKLoss','TopkCEPlusShiftDice','CEPlusTopkDice','TopkCEPlusTopkDice','PowDiceLoss','Cross_Entropy','TopkDiceLoss']
 __cls_loss__ = ['BCEWithLogitsLoss']
 __mtl_loss__ = ['BCEPlusDice']
 # Arguments when perform the trainer 
