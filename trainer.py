@@ -795,6 +795,10 @@ class SemanticSeg(object):
         elif loss_fun == 'CELabelSmoothingPlusDice':
             from loss.combine_loss import CELabelSmoothingPlusDice
             loss = CELabelSmoothingPlusDice(smoothing=0.1, weight=class_weight, ignore_index=0)
+        
+        elif loss_fun == 'OHEM':
+            from loss.cross_entropy import OhemCELoss
+            loss = OhemCELoss(thresh=0.7)
 
         return loss
 

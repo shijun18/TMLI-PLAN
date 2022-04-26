@@ -24,7 +24,7 @@ DISEASE = 'TMLI_UP'
 MODE = 'seg'
 NET_NAME = 'unet'
 ENCODER_NAME = 'simplenet'
-VERSION = 'v1.0.3'
+VERSION = 'v1.0.4'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
@@ -105,7 +105,7 @@ INIT_TRAINER = {
  }
 #---------------------------------
 
-__seg_loss__ = ['DiceLoss','TopKLoss','CEPlusDice','TopkCEPlusDice','DynamicTopkCEPlusDice','DynamicTopKLoss','TopkCEPlusShiftDice','CEPlusTopkDice','TopkCEPlusTopkDice','PowDiceLoss','Cross_Entropy','TopkDiceLoss']
+__seg_loss__ = ['TopKLoss','CELabelSmoothingPlusDice','CEPlusDice','DynamicTopKLoss','OHEM']
 __cls_loss__ = ['BCEWithLogitsLoss']
 __mtl_loss__ = ['BCEPlusDice']
 # Arguments when perform the trainer 
@@ -113,7 +113,7 @@ __mtl_loss__ = ['BCEPlusDice']
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'DynamicTopKLoss' if ROI_NUMBER is not None else 'DynamicTopKLoss' #'CEPlusDice'  'TopKLoss'
+    LOSS_FUN = 'OHEM' if ROI_NUMBER is not None else 'OHEM' #'CEPlusDice'  'TopKLoss'
 else:
     LOSS_FUN = 'BCEPlusDice'
 

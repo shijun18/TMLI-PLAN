@@ -175,7 +175,7 @@ class Config:
     roi_number = None
     net_name = 'unet'
     encoder_name = 'simplenet'
-    version = 'v1.0.3'
+    version = 'v1.0.4'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
