@@ -73,3 +73,28 @@ class OhemCELoss(nn.Module):
         if loss_hard.numel() < n_min:
             loss_hard, _ = loss.topk(n_min)
         return torch.mean(loss_hard)
+
+
+class LabelSmoothing(torch.nn.Module):
+    """NLL loss with label smoothing.
+    """
+    def __init__(self, smoothing=0.0, weight=None):
+        """Constructor for the LabelSmoothing module.
+        :param smoothing: label smoothing factor
+        """
+        super(LabelSmoothing, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.weight = weight
+
+    
+    def forward(self, inp, target):
+        ce = CrossentropyLoss(weight=self.weight)
+        ce_loss = ce(inp,target)
+
+        # num_classes = inp.size()[1]
+        log_preds = F.log_softmax(inp, dim=1)
+        smooth_loss = -log_preds.mean()
+
+        loss = self.confidence * ce_loss + self.smoothing * smooth_loss
+        return loss

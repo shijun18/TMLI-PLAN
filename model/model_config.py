@@ -180,6 +180,32 @@ MODEL_CONFIG = {
             'upsampling': 8,
             'classes': 1,
             'aux_classifier': False
+        },
+        'mobilenetv3_large_075':{
+            'in_channels': 1,
+            'encoder_name': 'mobilenetv3_large_075',
+            'encoder_weights': None,
+            'encoder_depth': 5,
+            'encoder_channels':[16,24,32,88,720],  #[2,4,8,16,32]
+            'encoder_outindice':[-2,-1],
+            'decoder_use_batchnorm': True,
+            'decoder_channels': [64,64,64,128],
+            'upsampling': 8,
+            'classes': 1,
+            'aux_classifier': False
+        },
+        'xception':{
+            'in_channels': 1,
+            'encoder_name': 'xception',
+            'encoder_weights': None,
+            'encoder_depth': 5,
+            'encoder_channels':[64,128,256,728,2048],  #[2,4,8,16,32]
+            'encoder_outindice':[-2,-1],
+            'decoder_use_batchnorm': True,
+            'decoder_channels': [64,64,64,128],
+            'upsampling': 8,
+            'classes': 1,
+            'aux_classifier': False
         }
     }
 }

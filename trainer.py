@@ -757,10 +757,14 @@ class SemanticSeg(object):
         if loss_fun == 'Cross_Entropy':
             from loss.cross_entropy import CrossentropyLoss
             loss = CrossentropyLoss(weight=class_weight)
-        if loss_fun == 'DynamicTopKLoss':
+        elif loss_fun == 'DynamicTopKLoss':
             from loss.cross_entropy import DynamicTopKLoss
             loss = DynamicTopKLoss(weight=class_weight,step_threshold=self.step_pre_epoch)
         
+        elif loss_fun == 'CELabelSmoothingPlusDice':
+            from loss.combine_loss import CELabelSmoothingPlusDice
+            loss = CELabelSmoothingPlusDice(smoothing=0.1, weight=class_weight, ignore_index=0)
+
         elif loss_fun == 'DynamicTopkCEPlusDice':
             from loss.combine_loss import DynamicTopkCEPlusDice
             loss = DynamicTopkCEPlusDice(weight=class_weight, ignore_index=0, step_threshold=self.step_pre_epoch)

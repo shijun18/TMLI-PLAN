@@ -9,7 +9,7 @@ __disease__ = ['TMLI','TMLI_UP']
 __cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet','bisenetv1']
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
-                   'resnext50_32x4d','timm-resnest14d','timm-resnest26d','timm-resnest50d', \
+                   'resnext50_32x4d','timm-resnest50d','mobilenetv3_large_075','xception', \
                     'efficientnet-b4', 'efficientnet-b5']
 __new_encoder_name__ = ['swin_transformer','swinplusr18']
 __mode__ = ['cls','seg','mtl']
@@ -105,7 +105,8 @@ INIT_TRAINER = {
  }
 #---------------------------------
 
-__seg_loss__ = ['DiceLoss','TopKLoss','CEPlusDice','OHEM','TopkCEPlusDice','DynamicTopkCEPlusDice','DynamicTopKLoss','TopkCEPlusShiftDice','CEPlusTopkDice','TopkCEPlusTopkDice','PowDiceLoss','Cross_Entropy','TopkDiceLoss']
+__seg_loss__ = ['TopKLoss','DiceLoss','CEPlusDice','CELabelSmoothingPlusDice','OHEM','Cross_Entropy',\
+    'TopkCEPlusDice', 'DynamicTopKLoss','CEPlusTopkDice','PowDiceLoss','TopkDiceLoss']
 __cls_loss__ = ['BCEWithLogitsLoss']
 __mtl_loss__ = ['BCEPlusDice']
 # Arguments when perform the trainer 
