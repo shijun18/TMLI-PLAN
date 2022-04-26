@@ -1,10 +1,11 @@
 import sys
 sys.path.append('..')
 import torch
-from model.encoder import swin_transformer,simplenet,trans_plus_conv,resnet
+from model.encoder import swin_transformer,simplenet,trans_plus_conv,resnet,mobilenetv3,xception
 
 moco_weight_path = {
-    'resnet18':'/staff/shijun/torch_projects/Med_Seg/moco/convert_ckpt/moco_v2/resnet18/v1.0-x5/convert_epoch=0174-loss=0.537353-top1=98.037689.pth.tar'
+    'resnet18':'/staff/shijun/torch_projects/Med_Seg/moco/convert_ckpt/moco_v2/resnet18/v1.0-x5/convert_epoch=0174-loss=0.537353-top1=98.037689.pth.tar',
+    'swinplusr18':'/staff/shijun/torch_projects/Med_Seg/moco/convert_ckpt/moco_v2/swinplusr18/v5.0-x6/convert_epoch=0272-loss=7.834034-top1=81.369278.pth.tar'
 }
 
 def build_encoder(arch='resnet18', weights=None, **kwargs):
@@ -19,6 +20,10 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
         backbone = simplenet.__dict__[arch](**kwargs)
     elif arch.startswith('swinplus'):
         backbone = trans_plus_conv.__dict__[arch](**kwargs)
+    elif arch.startswith('mobilenetv3'):
+        backbone = mobilenetv3.__dict__[arch](**kwargs)
+    elif arch.startswith('xception'):
+        backbone = xception.__dict__[arch](**kwargs)
     else:
         raise Exception('Architecture undefined!')
 
@@ -29,6 +34,7 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
         if arch.startswith('resnet'):
             assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
             print(">>>> loaded pre-trained model '{}' ".format(moco_weight_path[arch]))
+        print(msg)
     
     return backbone
 
@@ -37,12 +43,15 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
 if __name__ == '__main__':
 
     import os 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
     # net = build_encoder('swin_transformer',n_channels=1)
     # net = build_encoder('resnet18',n_channels=1)
-    net = build_encoder('swinplusr18',n_channels=1)
+    # net = build_encoder('swinplusr18',n_channels=1)
     # net = build_encoder('simplenet',n_channels=1)
+    # net = build_encoder('swinplusr18','moco',n_channels=1)
+    # net = build_encoder('mobilenetv3_large_075',n_channels=1)
+    net = build_encoder('xception',n_channels=1)
     net = net.cuda()
     net.train()
     input = torch.randn((1,1,512,512)).cuda()

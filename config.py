@@ -23,13 +23,13 @@ json_path = {
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
 NET_NAME = 'res_unet'
-ENCODER_NAME = 'simplenet'
-VERSION = 'v6.0'
+ENCODER_NAME = 'swinplusr18'
+VERSION = 'v6.12-moco'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '6'
+DEVICE = '1'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -68,7 +68,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (512,512)
-BATCH_SIZE = 16
+BATCH_SIZE = 96
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
@@ -76,33 +76,32 @@ WEIGHT_PATH = get_weight_path(CKPT_PATH)
 print(WEIGHT_PATH)
 
 INIT_TRAINER = {
-  'net_name':NET_NAME,
-  'encoder_name':ENCODER_NAME,
-  'lr':1e-3, 
-  'n_epoch':100,
-  'channels':1,
-  'num_classes':NUM_CLASSES, 
-  'roi_number':ROI_NUMBER,
-  'scale':SCALE,
-  'input_shape':INPUT_SHAPE,
-  'crop':0,
-  'batch_size':BATCH_SIZE,
-  'num_workers':2,
-  'device':DEVICE,
-  'pre_trained':PRE_TRAINED,
-  'ex_pre_trained':EX_PRE_TRAINED,
-  'ckpt_point':CKPT_POINT,
-  'weight_path':WEIGHT_PATH,
-  'use_moco':None if 'moco' not in VERSION else 'moco',
-  'weight_decay': 0.0001,
-  'momentum': 0.99,
-  'gamma': 0.1,
-  'milestones': [30,60,90],
-  'T_max':5,
-  'mode':MODE,
-  'topk':20,
-  'freeze':None,
-  'use_fp16':True #False if the machine you used without tensor core
+    'net_name':NET_NAME,
+    'encoder_name':ENCODER_NAME,
+    'lr':1e-3, 
+    'n_epoch':120,
+    'channels':1,
+    'num_classes':NUM_CLASSES, 
+    'roi_number':ROI_NUMBER,
+    'scale':SCALE,
+    'input_shape':INPUT_SHAPE,
+    'crop':0,
+    'batch_size':BATCH_SIZE,
+    'num_workers':2*GPU_NUM,
+    'device':DEVICE,
+    'pre_trained':PRE_TRAINED,
+    'ex_pre_trained':EX_PRE_TRAINED,
+    'ckpt_point':CKPT_POINT,
+    'weight_path':WEIGHT_PATH,
+    'use_moco':None if 'moco' not in VERSION else 'moco',
+    'weight_decay': 0.0001,
+    'momentum': 0.99,
+    'gamma': 0.1,
+    'milestones': [30,60,90],
+    'T_max':5,
+    'mode':MODE,
+    'topk':20,
+    'use_fp16':True #False if the machine you used without tensor core
  }
 #---------------------------------
 
@@ -119,13 +118,13 @@ else:
     LOSS_FUN = 'BCEPlusDice'
 
 SETUP_TRAINER = {
-  'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),
-  'log_dir':'./log/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME), 
-  'optimizer':'AdamW',
-  'loss_fun':LOSS_FUN,
-  'class_weight':None, #[1,4]
-  'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
-  'freeze_encoder':False
+    'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),
+    'log_dir':'./log/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME), 
+    'optimizer':'AdamW',
+    'loss_fun':LOSS_FUN,
+    'class_weight':None, #[1,4]
+    'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
+    'freeze_encoder': False if 'freeze' not in VERSION else True
   }
 #---------------------------------
 TEST_PATH = None

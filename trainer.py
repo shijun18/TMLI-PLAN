@@ -81,7 +81,6 @@ class SemanticSeg(object):
                  T_max=5,
                  mode='cls',
                  topk=10,
-                 freeze=None,
                  use_fp16=True):
         super(SemanticSeg, self).__init__()
 
@@ -117,7 +116,6 @@ class SemanticSeg(object):
 
         self.mode = mode
         self.topk = topk
-        self.freeze = freeze
         self.use_fp16=use_fp16
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.device
@@ -182,11 +180,11 @@ class SemanticSeg(object):
                 param.requires_grad = False
 
         # only for deeplab
-        if self.freeze is not None and 'deeplab' in self.net_name:
-            if self.freeze == 'backbone':
-                net.freeze_backbone()
-            elif self.freeze == 'classifier':
-                net.freeze_classifier()
+        # if self.freeze is not None and 'deeplab' in self.net_name:
+        #     if self.freeze == 'backbone':
+        #         net.freeze_backbone()
+        #     elif self.freeze == 'classifier':
+        #         net.freeze_classifier()
 
         lr = self.lr
         loss = self._get_loss(loss_fun, class_weight)
@@ -707,6 +705,14 @@ class SemanticSeg(object):
         elif net_name == 'att_unet':
             from model.att_unet import att_unet
             net = att_unet(net_name,
+            encoder_name=self.encoder_name,
+            encoder_weights=self.use_moco,
+            in_channels=self.channels,
+            classes=self.num_classes)
+        
+        elif net_name == 'bisenetv1':
+            from model.bisenetv1 import bisenetv1
+            net = bisenetv1(net_name,
             encoder_name=self.encoder_name,
             encoder_weights=self.use_moco,
             in_channels=self.channels,

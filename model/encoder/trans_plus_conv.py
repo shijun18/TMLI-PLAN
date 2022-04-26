@@ -14,6 +14,7 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
     # print(arch)
     if arch.startswith('resnet'):
         backbone = resnet.__dict__[arch](**kwargs)
+        backbone.fc = nn.Linear(512, 2)
     elif arch.startswith('swin_transformer'):
         backbone = swin_transformer.__dict__[arch](**kwargs)
     elif arch.startswith('simplenet'):
