@@ -88,8 +88,8 @@ class LabelSmoothing(torch.nn.Module):
 
         loss = self.confidence * ce_loss + self.smoothing * smooth_loss
         return loss
-        
-class OhemCELoss(nn.Module):
+
+class OhemCELoss(torch.nn.Module):
 
     def __init__(self, thresh=0.7, ignore_lb=-100):
         super(OhemCELoss, self).__init__()
