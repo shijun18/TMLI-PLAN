@@ -24,9 +24,7 @@ if __name__ == '__main__':
     # version_list = ['v9.0']
     # version_list = ['v1.3-pretrain']
     # version_list = ['v4.3']
-    # version_list = ['v4.3-pretrain']
-    # version_list = ['v2.3-pretrain','v6.0','v5.0','v7.0']
-    version_list = ['v6.0']
+    version_list = ['v1.0.3']
 
     for version in version_list:
         dice_csv_list = [f'./result/raw_data/{version}_fold{str(i)}_dice.csv' for i in range(1,6)]

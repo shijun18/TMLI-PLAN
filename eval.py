@@ -1,5 +1,4 @@
-import os
-from pickle import FALSE 
+import os 
 import time
 import numpy as np
 import pandas as pd
@@ -174,25 +173,25 @@ class Config:
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'res_unet'
+    net_name = 'unet'
     encoder_name = 'simplenet'
-    version = 'v6.0'
+    version = 'v1.0.3'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
 
 if __name__ == '__main__':
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     # test data
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
-    # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_data'
+    # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
     sample_list = ['202398', '202774', '202610', '20210811', '202563', '202818', '202397', '202899', '202414', '202561']
     sample_list.sort()
     start = time.time()
     config = Config()
     
-    for fold in range(2,3):
+    for fold in range(1,6):
         print('>>>>>>>>>>>> Fold%d >>>>>>>>>>>>'%fold)
         total_dice = []
         total_hd = []

@@ -73,7 +73,6 @@ class SemanticSeg(object):
                  ex_pre_trained=False,
                  ckpt_point=True,
                  weight_path=None,
-                 use_moco=None,
                  weight_decay=0.,
                  momentum=0.95,
                  gamma=0.1,
@@ -81,6 +80,7 @@ class SemanticSeg(object):
                  T_max=5,
                  mode='cls',
                  topk=10,
+                 freeze=None,
                  use_fp16=True):
         super(SemanticSeg, self).__init__()
 
@@ -101,7 +101,6 @@ class SemanticSeg(object):
         self.ex_pre_trained = ex_pre_trained 
         self.ckpt_point = ckpt_point
         self.weight_path = weight_path
-        self.use_moco = use_moco
 
         self.start_epoch = 0
         self.global_step = 0
@@ -116,6 +115,7 @@ class SemanticSeg(object):
 
         self.mode = mode
         self.topk = topk
+        self.freeze = freeze
         self.use_fp16=use_fp16
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.device
@@ -140,8 +140,7 @@ class SemanticSeg(object):
                 optimizer='Adam',
                 loss_fun='Cross_Entropy',
                 class_weight=None,
-                lr_scheduler=None,
-                freeze_encoder=False):
+                lr_scheduler=None):
 
         torch.manual_seed(1000)
         np.random.seed(1000)
@@ -175,16 +174,12 @@ class SemanticSeg(object):
 
         net = self.net
 
-        if freeze_encoder:
-            for param in net.encoder.parameters():
-                param.requires_grad = False
-
         # only for deeplab
-        # if self.freeze is not None and 'deeplab' in self.net_name:
-        #     if self.freeze == 'backbone':
-        #         net.freeze_backbone()
-        #     elif self.freeze == 'classifier':
-        #         net.freeze_classifier()
+        if self.freeze is not None and 'deeplab' in self.net_name:
+            if self.freeze == 'backbone':
+                net.freeze_backbone()
+            elif self.freeze == 'classifier':
+                net.freeze_classifier()
 
         lr = self.lr
         loss = self._get_loss(loss_fun, class_weight)
@@ -632,12 +627,7 @@ class SemanticSeg(object):
         if net_name == 'unet':
             if self.encoder_name in ['simplenet','swin_transformer','swinplusr18']:
                 from model.unet import unet
-                net = unet(net_name,
-                encoder_name=self.encoder_name,
-                encoder_weights=self.use_moco,
-                in_channels=self.channels,
-                classes=self.num_classes,
-                aux_classifier=True)
+                net = unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes,aux_classifier=True)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.Unet(
@@ -680,11 +670,7 @@ class SemanticSeg(object):
         elif net_name == 'deeplabv3+':
             if self.encoder_name in ['swinplusr18']:
                 from model.deeplabv3plus import deeplabv3plus
-                net = deeplabv3plus(net_name,
-                encoder_name=self.encoder_name,
-                encoder_weights=self.use_moco,
-                in_channels=self.channels,
-                classes=self.num_classes)
+                net = deeplabv3plus(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
             else:
                 import segmentation_models_pytorch as smp
                 net = smp.DeepLabV3Plus(
@@ -696,27 +682,11 @@ class SemanticSeg(object):
                 )
         elif net_name == 'res_unet':
             from model.res_unet import res_unet
-            net = res_unet(net_name,
-            encoder_name=self.encoder_name,
-            encoder_weights=self.use_moco,
-            in_channels=self.channels,
-            classes=self.num_classes)
+            net = res_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
         
         elif net_name == 'att_unet':
             from model.att_unet import att_unet
-            net = att_unet(net_name,
-            encoder_name=self.encoder_name,
-            encoder_weights=self.use_moco,
-            in_channels=self.channels,
-            classes=self.num_classes)
-        
-        elif net_name == 'bisenetv1':
-            from model.bisenetv1 import bisenetv1
-            net = bisenetv1(net_name,
-            encoder_name=self.encoder_name,
-            encoder_weights=self.use_moco,
-            in_channels=self.channels,
-            classes=self.num_classes)
+            net = att_unet(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
 
         ## external transformer + U-like net
         elif net_name == 'UTNet':
@@ -769,10 +739,6 @@ class SemanticSeg(object):
             from loss.cross_entropy import TopKLoss
             loss = TopKLoss(weight=class_weight, k=self.topk)
         
-        elif loss_fun == 'OHEM':
-            from loss.cross_entropy import OhemCELoss
-            loss = OhemCELoss(thresh=0.7)
-
         elif loss_fun == 'DiceLoss':
             from loss.dice_loss import DiceLoss
             loss = DiceLoss(weight=class_weight, ignore_index=0, p=1)
@@ -825,7 +791,11 @@ class SemanticSeg(object):
         elif loss_fun == 'TopkCEPlusTopkShiftDice':
             from loss.combine_loss import TopkCEPlusTopkShiftDice
             loss = TopkCEPlusTopkShiftDice(weight=class_weight,ignore_index=0, reduction='topk',shift=0.5,k=self.topk)
-        
+
+        elif loss_fun == 'CELabelSmoothingPlusDice':
+            from loss.combine_loss import CELabelSmoothingPlusDice
+            loss = CELabelSmoothingPlusDice(smoothing=0.1, weight=class_weight, ignore_index=0)
+
         return loss
 
     def _get_optimizer(self, optimizer, net, lr):

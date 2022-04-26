@@ -8,7 +8,7 @@ __pycache__/
 *.xlsx
 *.txt
 *.vscode/
-
+ckpt/
 # C extensions
 *.so
 
