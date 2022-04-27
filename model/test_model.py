@@ -5,6 +5,8 @@ from model.att_unet import att_unet
 from model.res_unet import res_unet
 from model.deeplabv3plus import deeplabv3plus
 from model.bisenetv1 import bisenetv1
+from model.bisenetv2 import bisenetv2
+from model.sfnet import sfnet
 
 if __name__ == '__main__':
 
@@ -36,8 +38,18 @@ if __name__ == '__main__':
     # net = bisenetv1('bisenetv1','resnet18',in_channels=1,classes=2)
     # net = bisenetv1('bisenetv1','swin_transformer',in_channels=1,classes=2)
     # net = bisenetv1('bisenetv1','mobilenetv3_large_075',in_channels=1,classes=2)
-    net = bisenetv1('bisenetv1','xception',in_channels=1,classes=2)
+    # net = bisenetv1('bisenetv1','xception',in_channels=1,classes=2)
 
+    #bisenetv2
+    # net = bisenetv2('bisenetv2','resnet18',in_channels=1,classes=2)
+    # net = bisenetv2('bisenetv2','swin_transformer',in_channels=1,classes=2)
+    # net = bisenetv2('bisenetv2','mobilenetv3_large_075',in_channels=1,classes=2)
+    # net = bisenetv2('bisenetv2','xception',in_channels=1,classes=2)
+
+    #sfnet
+    # net = sfnet('sfnet','resnet18',in_channels=1,classes=2)
+    # net = sfnet('sfnet','simplenet',in_channels=1,classes=2)
+    net = sfnet('sfnet','swin_transformer',in_channels=1,classes=2)
     summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     
     net = net.cuda()
