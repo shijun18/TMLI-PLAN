@@ -34,7 +34,9 @@ if __name__ == '__main__':
 
     #bisenetv1
     # net = bisenetv1('bisenetv1','resnet18',in_channels=1,classes=2)
-    net = bisenetv1('bisenetv1','swin_transformer',in_channels=1,classes=2)
+    # net = bisenetv1('bisenetv1','swin_transformer',in_channels=1,classes=2)
+    # net = bisenetv1('bisenetv1','mobilenetv3_large_075',in_channels=1,classes=2)
+    net = bisenetv1('bisenetv1','xception',in_channels=1,classes=2)
 
     summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
     
