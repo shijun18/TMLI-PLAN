@@ -300,9 +300,25 @@ MODEL_CONFIG = {
             'num_stage':4,
             'decoder_use_batchnorm': True,
             'decoder_channels': [128],
-            'upsampling': 4,
-            'classes': 1,
-            'aux_classifier': False
+            'upsampling':4,
+            'classes':1,
+            'aux_classifier':False
         },
+    },
+    # icnet
+    'icnet':{
+        'resnet18':{
+            'in_channels':1,
+            'encoder_name':'resnet18',
+            'encoder_weights':None,
+            'encoder_depth':5,
+            'encoder_channels':[64,64,128,256,512],  #[2,4,8,16,32]
+            'encoder_outindice':[2,4],
+            'decoder_use_batchnorm':True,
+            'decoder_channels':[32,64,128], #[16,8,4,2]
+            'upsampling':4,
+            'classes':2,
+            'aux_classifier': False
+        }
     }
 }
