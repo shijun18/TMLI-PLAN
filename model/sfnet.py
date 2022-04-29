@@ -47,7 +47,7 @@ class SFnet(SegmentationModel):
     def __init__(
         self,
         in_channels: int = 3,
-        encoder_name: str = "simplenet_res",
+        encoder_name: str = "simplenet",
         encoder_weights: Optional[str] = None,
         encoder_depth: int = 5,
         encoder_channels: List[int] = [32,64,128,256,512],
