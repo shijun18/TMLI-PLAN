@@ -6,8 +6,9 @@ from utils import get_path_with_annotation,get_path_with_annotation_ratio
 from utils import get_weight_path
 
 __disease__ = ['TMLI','TMLI_UP']
-__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet','bisenetv1']
+__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet']
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
+__real_time_net__ = ['bisenetv1']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest50d','mobilenetv3_large_075','xception', \
                     'efficientnet-b4', 'efficientnet-b5']
@@ -23,13 +24,13 @@ json_path = {
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
 NET_NAME = 'res_unet'
-ENCODER_NAME = 'swinplusr18'
-VERSION = 'v6.12-moco'
+ENCODER_NAME = 'resnet18'
+VERSION = 'v6.1.3-roi'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '1'
+DEVICE = '3,4'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -68,7 +69,7 @@ PATH_LIST = glob.glob(os.path.join(info['2d_data']['train_path'],'*.hdf5'))
 
 #--------------------------------- others
 INPUT_SHAPE = (512,512)
-BATCH_SIZE = 96
+BATCH_SIZE = 32
 
 CKPT_PATH = './ckpt/{}/{}/{}/{}/fold{}'.format(DISEASE,MODE,VERSION,ROI_NAME,str(CURRENT_FOLD))
 
@@ -114,7 +115,7 @@ __mtl_loss__ = ['BCEPlusDice']
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'TopkCEPlusDice' if ROI_NUMBER is not None else 'TopKLoss' #'CEPlusDice'  'TopKLoss'
+    LOSS_FUN = 'TopkCEPlusDice' if ROI_NUMBER is not None else 'CELabelSmoothingPlusDice' #'CEPlusDice'  'TopKLoss'
 else:
     LOSS_FUN = 'BCEPlusDice'
 
@@ -124,8 +125,9 @@ SETUP_TRAINER = {
     'optimizer':'AdamW',
     'loss_fun':LOSS_FUN,
     'class_weight':None, #[1,4]
-    'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
-    'freeze_encoder': False if 'freeze' not in VERSION else True
+    'lr_scheduler':'CosineAnnealingWarmRestarts',#'CosineAnnealingWarmRestarts','MultiStepLR',
+    'freeze_encoder': False if 'freeze' not in VERSION else True,
+    'get_roi': False if 'roi' not in VERSION else True,
   }
 #---------------------------------
 TEST_PATH = None
