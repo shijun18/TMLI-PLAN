@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from data_utils.data_loader import DataGenerator, To_Tensor, CropResize, Trunc_and_Normalize
+from data_utils.transformer import Get_ROI
 from torch.cuda.amp import autocast as autocast
 from utils import get_weight_path,multi_dice,multi_hd
 import warnings
@@ -81,6 +82,10 @@ def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)
         from model.bisenetv2 import bisenetv2
         net = bisenetv2(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
     
+    elif net_name == 'bisenetv1':
+        from model.bisenetv1 import bisenetv1
+        net = bisenetv1(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
+
     ## external transformer + U-like net
     elif net_name == 'UTNet':
         from model.trans_model.utnet import UTNet
@@ -114,9 +119,13 @@ def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)
 
 
 def eval_process(test_path,config):
+    os.environ['CUDA_VISIBLE_DEVICES'] = config.device
+    device = torch.device("cuda:0")
+    # device = torch.device("cpu")
     # data loader
     test_transformer = transforms.Compose([
                 Trunc_and_Normalize(config.scale),
+                Get_ROI(pad_flag=False) if config.get_roi else transforms.Lambda(lambda x:x),
                 CropResize(dim=config.input_shape,num_class=config.num_classes,crop=config.crop),
                 To_Tensor(num_class=config.num_classes)
             ])
@@ -127,48 +136,63 @@ def eval_process(test_path,config):
                                 transform=test_transformer)
 
     test_loader = DataLoader(test_dataset,
-                            batch_size=1,
+                            batch_size=config.batch_size,
                             shuffle=False,
-                            num_workers=2,
+                            num_workers=4,
                             pin_memory=True)
     
     # get weight
     weight_path = get_weight_path(config.ckpt_path)
     print(weight_path)
 
+    s_time = time.time()
     # get net
     net = get_net(config.net_name,config.encoder_name,config.channels,config.num_classes,config.input_shape)
-    checkpoint = torch.load(weight_path)
+    checkpoint = torch.load(weight_path,map_location='cpu')
     # print(checkpoint['state_dict'])
     msg=net.load_state_dict(checkpoint['state_dict'],strict=False)
+    
     print(msg)
+    get_net_time = time.time()- s_time
+    print('define net and load weight need time:%.3f'%(get_net_time))
 
     pred = []
     true = []
-    net = net.cuda()
+    s_time = time.time()
+    # net = net.cuda()
+    # print(device)
+    net = net.to(device)
     net.eval()
+    move_time = time.time()- s_time
+    print('move net to GPU need time:%.3f'%(move_time))
 
+    extra_time = 0.
     with torch.no_grad():
         for step, sample in enumerate(test_loader):
             data = sample['image']
             target = sample['mask']
 
-            data = data.cuda()
-
+            ####
+            # data = data.cuda()
+            data = data.to(device)
             with autocast(True):
                 output = net(data)
+                
             if isinstance(output,tuple) or isinstance(output,list):
                 seg_output = output[0]
             else:
                 seg_output = output
-            seg_output = torch.argmax(torch.softmax(seg_output, dim=1),1).detach().cpu().numpy()                          
+            # seg_output = torch.argmax(torch.softmax(seg_output, dim=1),1).detach().cpu().numpy() 
+            seg_output = torch.argmax(seg_output,1).detach().cpu().numpy()                           
+            s_time = time.time()
             target = torch.argmax(target,1).detach().cpu().numpy()
+            extra_time += time.time() - s_time
             pred.append(seg_output)
             true.append(target)
     pred = np.concatenate(pred,axis=0)
     true = np.concatenate(true,axis=0)
-
-    return pred,true
+    print('extra time:%.3f'%extra_time)
+    return pred,true,extra_time+move_time+get_net_time
 
 
 class Config:
@@ -178,16 +202,18 @@ class Config:
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'bisenetv2'
-    encoder_name = 'swin_transformer'
-    version = 'v12.11'
+    net_name = 'bisenetv1'
+    encoder_name = 'resnet18'
+    version = 'v12.1'
+    device = "2"
     fold = 1
-    ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
+    batch_size = 32
+    get_roi=False if 'roi' not in version else True
+
+    ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All'
 
 
 if __name__ == '__main__':
-
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     # test data
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
     # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
@@ -203,7 +229,7 @@ if __name__ == '__main__':
         info_dice = []
         info_hd = []
         config.fold = fold
-        config.ckpt_path = f'./ckpt/TMLI_UP/seg/{config.version}/All/fold{str(fold)}'
+        config.ckpt_path = f'{config.ckpt_path}/fold{str(fold)}'
         for sample in sample_list:
             info_item_dice = []
             info_item_hd = []
@@ -213,8 +239,13 @@ if __name__ == '__main__':
             test_path = [case.path for case in os.scandir(data_path) if case.name.split('_')[0] == sample]
             test_path.sort(key=lambda x:eval(x.split('_')[-1].split('.')[0]))
             print(len(test_path))
-            pred,true = eval_process(test_path,config)
-            
+            sample_start = time.time()
+            pred,true,extra_time = eval_process(test_path,config)
+            total_time = time.time() - sample_start 
+            actual_time = total_time - extra_time
+            print('total time:%.3f'%total_time)
+            print('actual time:%.3f'%actual_time)
+            print("actual fps:%.3f"%(len(test_path)/actual_time))
             # print(pred.shape,true.shape)
 
             category_dice, avg_dice = multi_dice(true,pred,config.num_classes - 1)
