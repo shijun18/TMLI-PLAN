@@ -136,7 +136,8 @@ def eval_process(test_path,config):
     net = get_net(config.net_name,config.encoder_name,config.channels,config.num_classes,config.input_shape)
     checkpoint = torch.load(weight_path)
     # print(checkpoint['state_dict'])
-    net.load_state_dict(checkpoint['state_dict'])
+    msg=net.load_state_dict(checkpoint['state_dict'],strict=False)
+    print(msg)
 
     pred = []
     true = []

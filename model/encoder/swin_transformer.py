@@ -434,7 +434,7 @@ class SwinTransformer(nn.Module):
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -
           https://arxiv.org/pdf/2103.14030
     Args:
-        pretrain_img_size (int): Input image size for training the pretrained model,
+        img_size (int): Input image size for training the pretrained model,
             used in absolute postion embedding. Default 224.
         patch_size (int | tuple(int)): Patch size. Default: 4.
         in_chans (int): Number of input image channels. Default: 3.
@@ -477,7 +477,8 @@ class SwinTransformer(nn.Module):
                  patch_norm=True,
                  out_indices=(0, 1, 2, 3),
                  frozen_stages=-1,
-                 use_checkpoint=False):
+                 use_checkpoint=False,
+                 classification=False):
         super().__init__()
 
         self.img_size = img_size
@@ -487,7 +488,7 @@ class SwinTransformer(nn.Module):
         self.patch_norm = patch_norm
         self.out_indices = out_indices
         self.frozen_stages = frozen_stages
-
+        self.classification = classification
         # split image into non-overlapping patches
         self.patch_embed = PatchEmbed(
             patch_size=patch_size, in_chans=n_channels, embed_dim=embed_dim,
@@ -528,10 +529,11 @@ class SwinTransformer(nn.Module):
 
         num_features = [int(embed_dim * 2 ** i) for i in range(self.num_layers)]
         self.num_features = num_features
+        if self.classification:
+            self.norm = norm_layer(self.num_features[-1])
+            self.avgpool = nn.AdaptiveAvgPool1d(1)
+            self.fc = nn.Linear(self.num_features[-1], num_classes) if num_classes > 0 else nn.Identity()
 
-        # self.norm = norm_layer(self.num_features[-1])
-        # self.avgpool = nn.AdaptiveAvgPool1d(1)
-        # self.fc = nn.Linear(self.num_features[-1], num_classes) if num_classes > 0 else nn.Identity()
         # add a norm layer for each output
         for i_layer in out_indices:
             layer = norm_layer(num_features[i_layer])
@@ -583,14 +585,20 @@ class SwinTransformer(nn.Module):
         for i in range(self.num_layers):
             layer = self.layers[i]
             x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
+            # print(x.size())
             if i in self.out_indices:
                 norm_layer = getattr(self, f'norm{i}')
                 x_out = norm_layer(x_out)
-
                 out = x_out.view(-1, H, W, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
-
-        return tuple(outs)
+        if self.classification:
+            x = self.norm(x)  # B L C
+            x = self.avgpool(x.transpose(1, 2))  # B C 1
+            x = torch.flatten(x, 1)
+            x = self.fc(x)
+            return x
+        else:
+            return tuple(outs)
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""
@@ -626,7 +634,8 @@ DEFAULT_CONFIG = dict(
     ape=False,
     patch_norm=True,
     out_indices=(0, 1, 2, 3),
-    use_checkpoint=False)
+    use_checkpoint=False,
+    classification=False)
 
 
 def swin_transformer(**kwargs):
@@ -637,6 +646,34 @@ def swin_transformer(**kwargs):
     return net
 
 
+def swin_transformer_s(**kwargs):
+    for key in kwargs:
+        if key in DEFAULT_CONFIG:
+            DEFAULT_CONFIG[key] = kwargs[key]
+    DEFAULT_CONFIG['depths'] = [2,2,18,2]
+    net = SwinTransformer(**DEFAULT_CONFIG)
+    return net
+
+def swin_transformer_b(**kwargs):
+    for key in kwargs:
+        if key in DEFAULT_CONFIG:
+            DEFAULT_CONFIG[key] = kwargs[key]
+    DEFAULT_CONFIG['depths'] = [2,2,18,2]
+    DEFAULT_CONFIG['embed_dim'] = 128
+    DEFAULT_CONFIG['num_heads'] = [4,8,16,32]
+    net = SwinTransformer(**DEFAULT_CONFIG)
+    return net
+
+def swin_transformer_l(**kwargs):
+    for key in kwargs:
+        if key in DEFAULT_CONFIG:
+            DEFAULT_CONFIG[key] = kwargs[key]
+    DEFAULT_CONFIG['depths'] = [2,2,18,2]
+    DEFAULT_CONFIG['embed_dim'] = 192
+    DEFAULT_CONFIG['num_heads'] = [6,12,24,48]
+    net = SwinTransformer(**DEFAULT_CONFIG)
+    return net
+
 
 
 if __name__ == '__main__':
@@ -644,7 +681,7 @@ if __name__ == '__main__':
     import os 
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
-    net = swin_transformer(n_channels=1)
+    net = swin_transformer(img_size=512,n_channels=1)
     net = net.cuda()
     net.train()
     input = torch.randn((1,1,512,512)).cuda()

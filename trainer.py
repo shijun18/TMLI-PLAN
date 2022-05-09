@@ -839,7 +839,8 @@ class SemanticSeg(object):
 
     def _get_pre_trained(self, weight_path, ckpt_point=True):
         checkpoint = torch.load(weight_path)
-        self.net.load_state_dict(checkpoint['state_dict'])
+        msg=self.net.load_state_dict(checkpoint['state_dict'],strict=False)
+        print(msg)
         if ckpt_point:
             self.start_epoch = checkpoint['epoch'] + 1
             # self.loss_threshold = eval(os.path.splitext(self.weight_path.split(':')[-1])[0])

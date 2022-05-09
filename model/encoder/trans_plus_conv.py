@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import resnet,swin_transformer,simplenet
+from . import resnet,swin_transformer
 
 
 moco_weight_path = {
-    'resnet18':'/staff/shijun/torch_projects/Med_Seg/moco/convert_ckpt/moco_v2/resnet18/v1.0-x5/convert_epoch=0174-loss=0.537353-top1=98.037689.pth.tar'
+    'resnet18':None
 }
 
 def build_encoder(arch='resnet18', weights=None, **kwargs):
@@ -13,12 +13,9 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
     arch = arch.lower()
     # print(arch)
     if arch.startswith('resnet'):
-        backbone = resnet.__dict__[arch](**kwargs)
-        backbone.fc = nn.Linear(512, 2)
+        backbone = resnet.__dict__[arch](classification=False,**kwargs)
     elif arch.startswith('swin_transformer'):
-        backbone = swin_transformer.__dict__[arch](**kwargs)
-    elif arch.startswith('simplenet'):
-        backbone = simplenet.__dict__[arch](**kwargs)
+        backbone = swin_transformer.__dict__[arch](classification=False,**kwargs)
     else:
         raise Exception('Architecture undefined!')
         
@@ -26,9 +23,7 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
         print('Loading weights for backbone')
         msg = backbone.load_state_dict(
             torch.load(moco_weight_path[arch], map_location=lambda storage, loc: storage)['state_dict'], strict=False)
-        if arch.startswith('resnet'):
-            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
-            print(">>>> loaded pre-trained model '{}' ".format(moco_weight_path[arch]))
+        print(msg)
     
     return backbone
 
@@ -39,9 +34,9 @@ def conv1x1(in_planes, out_planes):
 
 
 class TransPlusConv(nn.Module):
-    def __init__(self, trans_encoder, conv_encoder, conv_num_features, n_channels=1):
+    def __init__(self, trans_encoder, conv_encoder, conv_num_features, n_channels=1,classification=False, num_classes=2):
         super(TransPlusConv, self).__init__()
-
+        self.classification = classification
         self.trans_encoder = build_encoder(trans_encoder,
                                         n_channels=n_channels,
                                         embed_dim=96,
@@ -68,7 +63,9 @@ class TransPlusConv(nn.Module):
             )
             fusion_layer.append(layer)
         self.fusion_layer = nn.ModuleList(fusion_layer)
-        
+        if self.classification:
+            self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+            self.fc = nn.Linear(self.conv_num_features[-1], num_classes)
 
     def forward(self, x):
         trans_out = self.trans_encoder(x)
@@ -81,8 +78,13 @@ class TransPlusConv(nn.Module):
             cat_x = torch.cat([trans_out[i], conv_out[i]], dim=1)
             fusion_x = layer(cat_x)
             out_x.append(fusion_x)
-
-        return out_x
+        if self.classification:
+            x = self.avgpool(out_x[-1])
+            x = torch.flatten(x, 1)
+            x = self.fc(x)
+            return x
+        else:
+            return out_x
 
     def get_stages(self):
         stages = []

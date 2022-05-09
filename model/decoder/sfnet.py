@@ -153,7 +153,7 @@ class AlignHead(nn.Module):
             fpn_feature_list.append(self.fpn_out[i](f))
             out.append(f)
 
-        fpn_feature_list.reverse()  # [P2 - P5]
+        fpn_feature_list.reverse() 
         output_size = fpn_feature_list[0].size()[2:]
         fusion_list = [fpn_feature_list[0]]
 
@@ -188,7 +188,7 @@ class SFnetDecoder(nn.Module):
         # fpn_dim = max(num_features // 8, 128)
         fpn_dim = decoder_channels[0]
         self.head = AlignHead(num_features, fpn_inplanes=encoder_channels[self.off_set:],fpn_dim=fpn_dim,norm_layer=norm_layer)
-        self.conv_last = Conv2dReLU(4 * fpn_dim, fpn_dim, 3, stride=1, padding=1,use_batchnorm=use_batchnorm,norm_layer=norm_layer)
+        self.conv_last = Conv2dReLU(int(num_stage * fpn_dim), fpn_dim, 3, stride=1, padding=1,use_batchnorm=use_batchnorm,norm_layer=norm_layer)
 
 
     def forward(self, *features):

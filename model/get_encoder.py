@@ -13,13 +13,13 @@ def build_encoder(arch='resnet18', weights=None, **kwargs):
     arch = arch.lower()
     
     if arch.startswith('resnet'):
-        backbone = resnet.__dict__[arch](**kwargs)
+        backbone = resnet.__dict__[arch](classification=False,**kwargs)
     elif arch.startswith('swin_transformer'):
-        backbone = swin_transformer.__dict__[arch](**kwargs)
+        backbone = swin_transformer.__dict__[arch](classification=False,**kwargs)
     elif arch.startswith('simplenet'):
         backbone = simplenet.__dict__[arch](**kwargs)
     elif arch.startswith('swinplus'):
-        backbone = trans_plus_conv.__dict__[arch](**kwargs)
+        backbone = trans_plus_conv.__dict__[arch](classification=False,**kwargs)
     elif arch.startswith('mobilenetv3'):
         backbone = mobilenetv3.__dict__[arch](**kwargs)
     elif arch.startswith('xception'):
