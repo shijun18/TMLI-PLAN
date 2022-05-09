@@ -6,9 +6,9 @@ from utils import get_path_with_annotation,get_path_with_annotation_ratio
 from utils import get_weight_path
 
 __disease__ = ['TMLI','TMLI_UP']
-__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet',]
+__cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet']
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
-__real_time_net__ = ['bisenetv1']
+__real_time_net__ = ['bisenetv2']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest50d','mobilenetv3_large_075','xception', \
                     'efficientnet-b4', 'efficientnet-b5']
@@ -23,14 +23,14 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'unet'
-ENCODER_NAME = 'simplenet'
-VERSION = 'v1.0.4'
+NET_NAME = 'bisenetv2'
+ENCODER_NAME = 'swin_transformer'
+VERSION = 'v12.11'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '2,3'
+DEVICE = '0,1'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -113,7 +113,7 @@ __mtl_loss__ = ['BCEPlusDice']
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'OHEM' if ROI_NUMBER is not None else 'OHEM' #'CEPlusDice'  'TopKLoss'
+    LOSS_FUN = 'TopKLoss' if ROI_NUMBER is not None else 'CELabelSmoothingPlusDice' #'CEPlusDice'  'TopKLoss'
 else:
     LOSS_FUN = 'BCEPlusDice'
 

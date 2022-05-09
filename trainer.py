@@ -718,6 +718,10 @@ class SemanticSeg(object):
             config.in_chans = self.channels
             net = SwinUnet(config, img_size=self.input_shape[0], num_classes=self.num_classes)
             # net.load_from('./initmodel/swin_tiny_patch4_window7_224.pth')
+        
+        elif net_name == 'bisenetv2':
+            from model.bisenetv2 import bisenetv2
+            net = bisenetv2(net_name,encoder_name=self.encoder_name,in_channels=self.channels,classes=self.num_classes)
 
         return net
 

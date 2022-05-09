@@ -76,6 +76,10 @@ def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)
     elif net_name == 'att_unet':
         from model.att_unet import att_unet
         net = att_unet(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
+
+    elif net_name == 'bisenetv2':
+        from model.bisenetv2 import bisenetv2
+        net = bisenetv2(net_name,encoder_name=encoder_name,in_channels=channels,classes=num_classes)
     
     ## external transformer + U-like net
     elif net_name == 'UTNet':
@@ -174,16 +178,16 @@ class Config:
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'unet'
-    encoder_name = 'simplenet'
-    version = 'v1.0.4'
+    net_name = 'bisenetv2'
+    encoder_name = 'swin_transformer'
+    version = 'v12.11'
     fold = 1
     ckpt_path = f'./ckpt/TMLI_UP/seg/{version}/All/fold{str(fold)}'
 
 
 if __name__ == '__main__':
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     # test data
     data_path = '/staff/shijun/dataset/Med_Seg/TMLI/up_2d_test_data'
     # data_path = '/staff/shijun/dataset/Med_Seg/TMLI/2d_data'
