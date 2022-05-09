@@ -8,6 +8,7 @@ from utils import get_weight_path
 __disease__ = ['TMLI','TMLI_UP']
 __cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet',]
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
+__real_time_net__ = ['bisenetv1']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest50d','mobilenetv3_large_075','xception', \
                     'efficientnet-b4', 'efficientnet-b5']
@@ -100,7 +101,6 @@ INIT_TRAINER = {
   'T_max':5,
   'mode':MODE,
   'topk':20,
-  'freeze':None,
   'use_fp16':True #False if the machine you used without tensor core
  }
 #---------------------------------
@@ -118,12 +118,14 @@ else:
     LOSS_FUN = 'BCEPlusDice'
 
 SETUP_TRAINER = {
-  'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),
-  'log_dir':'./log/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME), 
-  'optimizer':'AdamW',
-  'loss_fun':LOSS_FUN,
-  'class_weight':None, #[1,4]
-  'lr_scheduler':'MultiStepLR',#'CosineAnnealingWarmRestarts','MultiStepLR',
+    'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),
+    'log_dir':'./log/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME), 
+    'optimizer':'AdamW',
+    'loss_fun':LOSS_FUN,
+    'class_weight':None, #[1,4]
+    'lr_scheduler':'CosineAnnealingWarmRestarts',#'CosineAnnealingWarmRestarts','MultiStepLR',
+    'freeze_encoder': False if 'freeze' not in VERSION else True,
+    'get_roi': False if 'roi' not in VERSION else True,
   }
 #---------------------------------
 TEST_PATH = None

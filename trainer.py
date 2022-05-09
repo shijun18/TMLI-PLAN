@@ -24,7 +24,7 @@ import shutil
 from torch.nn import functional as F
 
 from data_utils.transformer_3d import RandomFlip3D,RandomTranslationRotationZoom3D
-from data_utils.transformer import RandomFlip2D, RandomRotate2D, RandomErase2D,RandomZoom2D,RandomAdjust2D,RandomNoise2D,RandomDistort2D
+from data_utils.transformer import Get_ROI,RandomFlip2D, RandomRotate2D, RandomErase2D,RandomZoom2D,RandomAdjust2D,RandomNoise2D,RandomDistort2D
 from data_utils.data_loader import DataGenerator, To_Tensor, CropResize, Trunc_and_Normalize
 
 from torch.cuda.amp import autocast as autocast
@@ -80,7 +80,6 @@ class SemanticSeg(object):
                  T_max=5,
                  mode='cls',
                  topk=10,
-                 freeze=None,
                  use_fp16=True):
         super(SemanticSeg, self).__init__()
 
@@ -115,7 +114,6 @@ class SemanticSeg(object):
 
         self.mode = mode
         self.topk = topk
-        self.freeze = freeze
         self.use_fp16=use_fp16
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.device
@@ -140,7 +138,9 @@ class SemanticSeg(object):
                 optimizer='Adam',
                 loss_fun='Cross_Entropy',
                 class_weight=None,
-                lr_scheduler=None):
+                lr_scheduler=None,
+                freeze_encoder=False,
+                get_roi=False):
 
         torch.manual_seed(1000)
         np.random.seed(1000)
@@ -174,12 +174,10 @@ class SemanticSeg(object):
 
         net = self.net
 
-        # only for deeplab
-        if self.freeze is not None and 'deeplab' in self.net_name:
-            if self.freeze == 'backbone':
-                net.freeze_backbone()
-            elif self.freeze == 'classifier':
-                net.freeze_classifier()
+        if freeze_encoder:
+            for param in net.encoder.parameters():
+                param.requires_grad = False
+        self.get_roi = get_roi
 
         lr = self.lr
         loss = self._get_loss(loss_fun, class_weight)
@@ -211,6 +209,7 @@ class SemanticSeg(object):
             else:
                 train_transformer = transforms.Compose([
                     Trunc_and_Normalize(self.scale),
+                    Get_ROI(pad_flag=False) if self.get_roi else transforms.Lambda(lambda x:x),
                     CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
                     RandomErase2D(scale_flag=False),
                     RandomZoom2D(),
@@ -431,6 +430,7 @@ class SemanticSeg(object):
         else:
             val_transformer = transforms.Compose([
                 Trunc_and_Normalize(self.scale),
+                Get_ROI(pad_flag=False) if self.get_roi else transforms.Lambda(lambda x:x),
                 CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
                 To_Tensor(num_class=self.num_classes)
             ])
@@ -535,6 +535,7 @@ class SemanticSeg(object):
         else:
             test_transformer = transforms.Compose([
                 Trunc_and_Normalize(self.scale),
+                Get_ROI(pad_flag=False) if self.get_roi else transforms.Lambda(lambda x:x),
                 CropResize(dim=self.input_shape,num_class=self.num_classes,crop=self.crop),
                 To_Tensor(num_class=self.num_classes)
             ])
