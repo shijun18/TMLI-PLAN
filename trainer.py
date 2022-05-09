@@ -180,12 +180,6 @@ class SemanticSeg(object):
             for param in net.encoder.parameters():
                 param.requires_grad = False
         self.get_roi = get_roi
-        # only for deeplab
-        # if self.freeze is not None and 'deeplab' in self.net_name:
-        #     if self.freeze == 'backbone':
-        #         net.freeze_backbone()
-        #     elif self.freeze == 'classifier':
-        #         net.freeze_classifier()
 
         lr = self.lr
         loss = self._get_loss(loss_fun, class_weight)
