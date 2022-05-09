@@ -1,5 +1,4 @@
 import os
-from pickle import FALSE 
 import time
 import numpy as np
 import pandas as pd
@@ -172,11 +171,8 @@ def eval_process(test_path,config):
             ####
             # data = data.cuda()
             data = data.to(device)
-            if config.trt_flag:
+            with autocast(True):
                 output = net(data)
-            else:
-                with autocast(True):
-                    output = net(data)
                 
             if isinstance(output,tuple) or isinstance(output,list):
                 seg_output = output[0]
