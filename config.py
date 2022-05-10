@@ -8,7 +8,7 @@ from utils import get_weight_path
 __disease__ = ['TMLI','TMLI_UP']
 __cnn_net__ = ['unet','unet++','FPN','deeplabv3+','att_unet','res_unet']
 __trans_net__ = ['UTNet','UTNet_encoder','TransUNet','ResNet_UTNet','SwinUNet']
-__real_time_net__ = ['bisenetv1']
+__real_time_net__ = ['bisenetv1','bisenetv2','sfnet']
 __encoder_name__ = ['simplenet','resnet18','resnet34','resnet50','se_resnet50', \
                    'resnext50_32x4d','timm-resnest50d','mobilenetv3_large_075','xception', \
                     'efficientnet-b4', 'efficientnet-b5']
@@ -23,14 +23,14 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'res_unet'
+NET_NAME = 'sfnet'
 ENCODER_NAME = 'resnet18'
-VERSION = 'v6.1.3-roi'
+VERSION = 'v6.12.3-roi-sup'
 
 with open(json_path[DISEASE], 'r') as fp:
     info = json.load(fp)
 
-DEVICE = '3,4'
+DEVICE = '1'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
 PRE_TRAINED = False
@@ -102,7 +102,8 @@ INIT_TRAINER = {
     'T_max':5,
     'mode':MODE,
     'topk':20,
-    'use_fp16':True #False if the machine you used without tensor core
+    'use_fp16':True, #False if the machine you used without tensor core
+    'aux_deepvison':False if 'sup' not in VERSION else True
  }
 #---------------------------------
 
@@ -111,13 +112,15 @@ __seg_loss__ = ['TopKLoss','DiceLoss','CEPlusDice','CELabelSmoothingPlusDice','O
 __cls_loss__ = ['BCEWithLogitsLoss']
 __mtl_loss__ = ['BCEPlusDice']
 # Arguments when perform the trainer 
-
+loss_index = 0 if len(VERSION.split('.')) == 2 else eval(VERSION.split('.')[-1].split('-')[0])
 if MODE == 'cls':
     LOSS_FUN = 'BCEWithLogitsLoss'
 elif MODE == 'seg' :
-    LOSS_FUN = 'TopkCEPlusDice' if ROI_NUMBER is not None else 'CELabelSmoothingPlusDice' #'CEPlusDice'  'TopKLoss'
+    LOSS_FUN = 'TopkCEPlusDice' if ROI_NUMBER is not None else __seg_loss__[loss_index] #'CEPlusDice'  'TopKLoss'
 else:
     LOSS_FUN = 'BCEPlusDice'
+
+print('>>>>> loss fun:%s'%LOSS_FUN)
 
 SETUP_TRAINER = {
     'output_dir':'./ckpt/{}/{}/{}/{}'.format(DISEASE,MODE,VERSION,ROI_NAME),

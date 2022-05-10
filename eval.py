@@ -12,6 +12,28 @@ from utils import get_weight_path,multi_dice,multi_hd
 import warnings
 warnings.filterwarnings('ignore')
 
+def resize_and_pad(pred,true,num_classes,target_shape,bboxs):
+    from skimage.transform import resize
+    final_pred = []
+    final_true = []
+
+    for bbox, pred_item, true_item in zip(bboxs,pred,true):
+        h,w = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        new_pred = np.zeros(target_shape,dtype=np.float32)
+        new_true = np.zeros(target_shape,dtype=np.float32)
+        for z in range(1,num_classes):
+            roi_pred = resize((pred_item == z).astype(np.float32),(h,w),mode='constant')
+            new_pred[bbox[0]:bbox[2],bbox[1]:bbox[3]][roi_pred>=0.5] = z
+            roi_true = resize((true_item == z).astype(np.float32),(h,w),mode='constant')
+            new_true[bbox[0]:bbox[2],bbox[1]:bbox[3]][roi_true>=0.5] = z
+        final_pred.append(new_pred)
+        final_true.append(new_true)
+    
+    final_pred = np.concatenate(final_pred,axis=0)
+    final_true = np.concatenate(final_true,axis=0)
+    return final_pred, final_true
+
+
 def get_net(net_name,encoder_name,channels=1,num_classes=2,input_shape=(512,512)):
 
     if net_name == 'unet':
@@ -167,7 +189,6 @@ def eval_process(test_path,config):
         for step, sample in enumerate(test_loader):
             data = sample['image']
             target = sample['mask']
-
             ####
             # data = data.cuda()
             data = data.to(device)
@@ -183,6 +204,9 @@ def eval_process(test_path,config):
             s_time = time.time()
             target = torch.argmax(target,1).detach().cpu().numpy()
             extra_time += time.time() - s_time
+            if config.get_roi:
+                bboxs = torch.stack(sample['bbox'],dim=0).cpu().numpy().T
+                seg_output,target = resize_and_pad(seg_output,target,config.num_classes,config.input_shape,bboxs)
             pred.append(seg_output)
             true.append(target)
     pred = np.concatenate(pred,axis=0)
@@ -198,10 +222,10 @@ class Config:
     crop = 0
     scale = (-200,600)
     roi_number = None
-    net_name = 'bisenetv1'
-    encoder_name = 'resnet18'
-    version = 'v12.1'
-    device = "2"
+    net_name = 'res_unet'
+    encoder_name = 'swinplusr18'
+    version = 'v6.12.3-roi'
+    device = "1"
     fold = 1
     batch_size = 32
     get_roi=False if 'roi' not in version else True
@@ -219,14 +243,14 @@ if __name__ == '__main__':
     start = time.time()
     config = Config()
     
-    for fold in range(1,2):
+    for fold in range(1,6):
         print('>>>>>>>>>>>> Fold%d >>>>>>>>>>>>'%fold)
         total_dice = []
         total_hd = []
         info_dice = []
         info_hd = []
         config.fold = fold
-        config.ckpt_path = f'{config.ckpt_path}/fold{str(fold)}'
+        config.ckpt_path = f'./ckpt/TMLI_UP/seg/{config.version}/All/fold{str(fold)}'
         for sample in sample_list:
             info_item_dice = []
             info_item_hd = []

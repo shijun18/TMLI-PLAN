@@ -81,7 +81,8 @@ class SemanticSeg(object):
                  T_max=5,
                  mode='cls',
                  topk=10,
-                 use_fp16=True):
+                 use_fp16=True,
+                 aux_deepvison=False):
         super(SemanticSeg, self).__init__()
 
         self.net_name = net_name
@@ -117,6 +118,7 @@ class SemanticSeg(object):
         self.mode = mode
         self.topk = topk
         self.use_fp16=use_fp16
+        self.aux_deepvison=aux_deepvison
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.device
 
@@ -129,6 +131,7 @@ class SemanticSeg(object):
         if self.roi_number is not None:
             assert self.num_classes == 2, "num_classes must be set to 2 for binary segmentation"
         
+        self.get_roi = False
         
 
     def trainer(self,
@@ -698,7 +701,8 @@ class SemanticSeg(object):
             encoder_name=self.encoder_name,
             encoder_weights=self.use_moco,
             in_channels=self.channels,
-            classes=self.num_classes)
+            classes=self.num_classes,
+            aux_deepvison=self.aux_deepvison)
         
         elif net_name == 'att_unet':
             from model.att_unet import att_unet
@@ -711,6 +715,23 @@ class SemanticSeg(object):
         elif net_name == 'bisenetv1':
             from model.bisenetv1 import bisenetv1
             net = bisenetv1(net_name,
+            encoder_name=self.encoder_name,
+            encoder_weights=self.use_moco,
+            in_channels=self.channels,
+            classes=self.num_classes)
+        
+
+        elif net_name == 'bisenetv2':
+            from model.bisenetv2 import bisenetv2
+            net = bisenetv2(net_name,
+            encoder_name=self.encoder_name,
+            encoder_weights=self.use_moco,
+            in_channels=self.channels,
+            classes=self.num_classes)
+        
+        elif net_name == 'sfnet':
+            from model.sfnet import sfnet
+            net = sfnet(net_name,
             encoder_name=self.encoder_name,
             encoder_weights=self.use_moco,
             in_channels=self.channels,

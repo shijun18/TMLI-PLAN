@@ -123,6 +123,43 @@ class CenterBlock(nn.Sequential):
         super().__init__(conv1, conv2)
 
 
+
+class PSPModule(nn.Module):
+    """
+    Reference:
+        Zhao, Hengshuang, et al. *"Pyramid scene parsing network."*
+    """
+    def __init__(self, in_chans, out_chans, sizes=(1, 2, 3, 6), norm_layer=None):
+        super(PSPModule, self).__init__()
+
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        len_size = len(sizes)
+        self.stages = []
+        self.stages = nn.ModuleList(
+                [self._make_stage(in_chans, out_chans, size, norm_layer) for size in sizes]
+            )
+        self.bottleneck = nn.Sequential(
+            nn.Conv2d(int(in_chans + len_size*out_chans), out_chans, kernel_size=1, padding=0, dilation=1, bias=False),
+            norm_layer(out_chans),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(0.1)
+        )
+
+    def _make_stage(self, features, out_features, size, norm_layer):
+        prior = nn.AdaptiveAvgPool2d(output_size=(size, size))
+        conv = nn.Conv2d(features, out_features, kernel_size=1, bias=False)
+        bn = norm_layer(out_features)
+        return nn.Sequential(prior, conv, bn)
+
+    def forward(self, feats):
+        h, w = feats.size(2), feats.size(3)
+        priors = [F.interpolate(input=stage(feats), size=(h, w), mode='bilinear', align_corners=False) for stage in self.stages] + [feats]
+        bottle = self.bottleneck(torch.cat(priors, 1))
+        return bottle
+
+
+
 class ResUnetDecoder(nn.Module):
     def __init__(
             self,
@@ -133,6 +170,7 @@ class ResUnetDecoder(nn.Module):
             norm_layer=None,
             attention_type=None,
             center=False,
+            aux_deepvison=False
     ):
         super().__init__()
 
@@ -142,7 +180,7 @@ class ResUnetDecoder(nn.Module):
                     n_blocks, len(decoder_channels)
                 )
             )
-
+        self.aux_deepvison = aux_deepvison
         encoder_channels = encoder_channels[::-1]  # reverse channels to start from head of encoder
 
         # computing blocks input and output channels
@@ -152,8 +190,11 @@ class ResUnetDecoder(nn.Module):
         out_channels = decoder_channels
 
         if center:
-            self.center = CenterBlock(
-                head_channels, head_channels, use_batchnorm=use_batchnorm,norm_layer=norm_layer
+            # self.center = CenterBlock(
+            #     head_channels, head_channels, use_batchnorm=use_batchnorm,norm_layer=norm_layer
+            # )
+            self.center = PSPModule(
+                head_channels, head_channels,norm_layer=norm_layer
             )
         else:
             self.center = nn.Identity()
@@ -166,6 +207,13 @@ class ResUnetDecoder(nn.Module):
         ]
         self.blocks = nn.ModuleList(blocks)
 
+        if self.aux_deepvison:
+            fpn_out = [
+                Conv2dReLU(in_ch, out_channels[-1], kernel_size=3,padding=1,stride=1,use_batchnorm=use_batchnorm,norm_layer=norm_layer)
+                for in_ch in out_channels[:-1]
+            ]
+            self.fpn_out = nn.ModuleList(fpn_out)
+
     def forward(self, *features):
 
         features = features[::-1]  # reverse channels to start from head of encoder
@@ -173,9 +221,26 @@ class ResUnetDecoder(nn.Module):
         head = features[0]
         skips = features[1:]
 
+        mid_out = []
         x = self.center(head)
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
 
-        return x
+            if self.aux_deepvison:
+                mid_out.append(
+                    self.fpn_out[i](x) if i < len(self.fpn_out) else x
+                )
+
+        if self.aux_deepvison:
+            mid_out.reverse() 
+            output_size = mid_out[0].size()[2:]
+            fusion_out = [mid_out[0]]
+            for i in range(1,len(mid_out)):
+                fusion_out.append(
+                    F.interpolate(mid_out[i],output_size,mode='bilinear',align_corners=False)
+                )
+            return torch.cat(fusion_out, 1)
+
+        else:
+            return x

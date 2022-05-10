@@ -108,7 +108,9 @@ MODEL_CONFIG = {
             'decoder_channels':[256,128,64,32], #[8,4,2,1]
             'upsampling':1,
             'classes':2,
-            'aux_classifier': False
+            'use_center':False,
+            'aux_classifier': False,
+            'aux_deepvison':False
         },
         'resnet18':{
             'in_channels':1,
@@ -121,7 +123,9 @@ MODEL_CONFIG = {
             'decoder_channels':[256,128,64,32], #[16,8,4,2]
             'upsampling':2,
             'classes':2,
-            'aux_classifier': False
+            'use_center':False,
+            'aux_classifier': False,
+            'aux_deepvison':False
         },
         'swinplusr18':{
             'in_channels':1,
@@ -134,7 +138,9 @@ MODEL_CONFIG = {
             'decoder_channels':[256,128,64,32], #[16,8,4,2]
             'upsampling':2,
             'classes':2,
-            'aux_classifier': False
+            'use_center':False,
+            'aux_classifier': False,
+            'aux_deepvison':False
         }
     },
     # deeplabv3+
@@ -270,7 +276,7 @@ MODEL_CONFIG = {
             'encoder_name':'simplenet',
             'encoder_weights':None,
             'encoder_depth':5,
-            'encoder_channels':[32,64,128,256,512],  #[1,2,4,8,16]
+            'encoder_channels':[32,64,128,256,512],  #[1,2,4,8,16][-num_stage:]
             'num_stage':4,
             'decoder_use_batchnorm':True,
             'decoder_channels':[128], 

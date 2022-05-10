@@ -14,10 +14,7 @@ class Flatten(nn.Module):
 
 
 class ResUnet(SegmentationModel):
-    """AttUnet is a fully convolution neural network for image semantic segmentation. Consist of *encoder* 
-    and *decoder* parts connected with *skip connections*. Encoder extract features of different spatial 
-    resolution (skip connections) which are used by decoder to define accurate segmentation mask. Use *concatenation*
-    for fusing decoder blocks with skip connections.
+    """
     Args:
         in_channels: A number of input channels for the model, default is 3 (RGB images)
         encoder_name: Name of the classification model that will be used as an encoder (a.k.a backbone)
@@ -53,10 +50,12 @@ class ResUnet(SegmentationModel):
         encoder_channels: List[int] = [32,64,128,256,512],
         decoder_use_batchnorm: bool = True,
         decoder_attention_type: Optional[str] = None,
-        decoder_channels: List[int] = (256,128,64,32),
+        decoder_channels: List[int] = [256,128,64,32],
         upsampling: int = 1,
         classes: int = 1,
+        use_center: bool = False,
         aux_classifier: bool = False,
+        aux_deepvison: bool = False
     ):
         super().__init__()
 
@@ -75,13 +74,16 @@ class ResUnet(SegmentationModel):
             n_blocks=self.encoder_depth - 1,      # the number of decoder block, = encoder_depth - 1 
             use_batchnorm=decoder_use_batchnorm,
             norm_layer=BatchNorm2d,
-            center=False,
-            attention_type=decoder_attention_type
+            center=use_center,
+            attention_type=decoder_attention_type,
+            aux_deepvison=aux_deepvison
         )
+
+        final_channels = decoder_channels[-1] if not aux_deepvison else int(decoder_channels[-1]*len(decoder_channels))
 
         self.segmentation_head = nn.Sequential(
             nn.UpsamplingBilinear2d(scale_factor=upsampling) if upsampling > 1 else nn.Identity(),
-            nn.Conv2d(decoder_channels[-1], classes, kernel_size=3, padding=1)
+            nn.Conv2d(final_channels, classes, kernel_size=3, padding=1)
         )
 
         if aux_classifier:
