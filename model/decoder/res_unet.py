@@ -170,7 +170,7 @@ class ResUnetDecoder(nn.Module):
             norm_layer=None,
             attention_type=None,
             center=False,
-            aux_deepvison=False
+            aux_deepvision=False
     ):
         super().__init__()
 
@@ -180,7 +180,7 @@ class ResUnetDecoder(nn.Module):
                     n_blocks, len(decoder_channels)
                 )
             )
-        self.aux_deepvison = aux_deepvison
+        self.aux_deepvision = aux_deepvision
         encoder_channels = encoder_channels[::-1]  # reverse channels to start from head of encoder
 
         # computing blocks input and output channels
@@ -207,7 +207,7 @@ class ResUnetDecoder(nn.Module):
         ]
         self.blocks = nn.ModuleList(blocks)
 
-        if self.aux_deepvison:
+        if self.aux_deepvision:
             fpn_out = [
                 Conv2dReLU(in_ch, out_channels[-1], kernel_size=3,padding=1,stride=1,use_batchnorm=use_batchnorm,norm_layer=norm_layer)
                 for in_ch in out_channels[:-1]
@@ -227,12 +227,12 @@ class ResUnetDecoder(nn.Module):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
 
-            if self.aux_deepvison:
+            if self.aux_deepvision:
                 mid_out.append(
                     self.fpn_out[i](x) if i < len(self.fpn_out) else x
                 )
 
-        if self.aux_deepvison:
+        if self.aux_deepvision:
             mid_out.reverse() 
             output_size = mid_out[0].size()[2:]
             fusion_out = [mid_out[0]]

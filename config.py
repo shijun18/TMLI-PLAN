@@ -23,8 +23,8 @@ json_path = {
     
 DISEASE = 'TMLI_UP' 
 MODE = 'seg'
-NET_NAME = 'sfnet'
-ENCODER_NAME = 'resnet18'
+NET_NAME = 'res_unet'
+ENCODER_NAME = 'swinplusr18'
 VERSION = 'v6.12.3-roi-sup'
 
 with open(json_path[DISEASE], 'r') as fp:
@@ -103,7 +103,7 @@ INIT_TRAINER = {
     'mode':MODE,
     'topk':20,
     'use_fp16':True, #False if the machine you used without tensor core
-    'aux_deepvison':False if 'sup' not in VERSION else True
+    'aux_deepvision':False if 'sup' not in VERSION else True
  }
 #---------------------------------
 

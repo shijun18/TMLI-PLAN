@@ -55,7 +55,7 @@ class ResUnet(SegmentationModel):
         classes: int = 1,
         use_center: bool = False,
         aux_classifier: bool = False,
-        aux_deepvison: bool = False
+        aux_deepvision: bool = False
     ):
         super().__init__()
 
@@ -76,10 +76,10 @@ class ResUnet(SegmentationModel):
             norm_layer=BatchNorm2d,
             center=use_center,
             attention_type=decoder_attention_type,
-            aux_deepvison=aux_deepvison
+            aux_deepvision=aux_deepvision
         )
 
-        final_channels = decoder_channels[-1] if not aux_deepvison else int(decoder_channels[-1]*len(decoder_channels))
+        final_channels = decoder_channels[-1] if not aux_deepvision else int(decoder_channels[-1]*len(decoder_channels))
 
         self.segmentation_head = nn.Sequential(
             nn.UpsamplingBilinear2d(scale_factor=upsampling) if upsampling > 1 else nn.Identity(),

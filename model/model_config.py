@@ -110,7 +110,7 @@ MODEL_CONFIG = {
             'classes':2,
             'use_center':False,
             'aux_classifier': False,
-            'aux_deepvison':False
+            'aux_deepvision':False
         },
         'resnet18':{
             'in_channels':1,
@@ -125,7 +125,7 @@ MODEL_CONFIG = {
             'classes':2,
             'use_center':False,
             'aux_classifier': False,
-            'aux_deepvison':False
+            'aux_deepvision':False
         },
         'swinplusr18':{
             'in_channels':1,
@@ -140,7 +140,7 @@ MODEL_CONFIG = {
             'classes':2,
             'use_center':False,
             'aux_classifier': False,
-            'aux_deepvison':False
+            'aux_deepvision':False
         }
     },
     # deeplabv3+

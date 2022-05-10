@@ -82,7 +82,7 @@ class SemanticSeg(object):
                  mode='cls',
                  topk=10,
                  use_fp16=True,
-                 aux_deepvison=False):
+                 aux_deepvision=False):
         super(SemanticSeg, self).__init__()
 
         self.net_name = net_name
@@ -118,7 +118,7 @@ class SemanticSeg(object):
         self.mode = mode
         self.topk = topk
         self.use_fp16=use_fp16
-        self.aux_deepvison=aux_deepvison
+        self.aux_deepvision=aux_deepvision
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.device
 
@@ -702,7 +702,7 @@ class SemanticSeg(object):
             encoder_weights=self.use_moco,
             in_channels=self.channels,
             classes=self.num_classes,
-            aux_deepvison=self.aux_deepvison)
+            aux_deepvision=self.aux_deepvision)
         
         elif net_name == 'att_unet':
             from model.att_unet import att_unet
