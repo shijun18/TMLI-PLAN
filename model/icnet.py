@@ -5,8 +5,7 @@ from .model_config import MODEL_CONFIG
 from .decoder.icnet import ICnetDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
+
 
 
 class Flatten(nn.Module):
@@ -82,7 +81,7 @@ class ICnet(SegmentationModel):
             encoder_outindice=encoder_outindice,
             decoder_channels=decoder_channels,
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d,
+            norm_layer=nn.BatchNorm2d,
             classes=classes
         )
 

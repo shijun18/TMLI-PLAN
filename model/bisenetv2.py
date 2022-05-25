@@ -4,7 +4,6 @@ from .model_config import MODEL_CONFIG
 from .decoder.bisenetv2 import BiSenetv2Decoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from torch.nn import BatchNorm2d
 
 
 class Flatten(nn.Module):
@@ -71,7 +70,7 @@ class BiSenetv2(SegmentationModel):
             encoder_outindice=encoder_outindice,
             decoder_channels=decoder_channels,
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d,
+            norm_layer=nn.BatchNorm2d,
         )
 
         self.segmentation_head = nn.Sequential(

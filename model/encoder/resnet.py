@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
-from model.lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']
@@ -115,7 +113,7 @@ class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=2, n_channels=1, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None,
-                 norm_layer=BatchNorm2d,classification=False):
+                 norm_layer=None,classification=False):
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -152,7 +150,7 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm, BatchNorm2d)):
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
@@ -229,7 +227,12 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[arch],
                                               progress=progress)
-        model.load_state_dict(state_dict)
+        if kwargs['input_channels'] != 3:
+            mis_key = ['conv1.weight', 'bn1.running_mean', 'bn1.running_var', 'bn1.weight', 'bn1.bias']
+            for key in mis_key:
+                del state_dict[key]
+        model.load_state_dict(state_dict,strict=False)
+        # model.load_state_dict(state_dict)
     return model
 
 

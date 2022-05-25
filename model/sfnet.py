@@ -4,8 +4,6 @@ from .model_config import MODEL_CONFIG
 from .decoder.sfnet import SFnetDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
 
 
 class Flatten(nn.Module):
@@ -74,7 +72,7 @@ class SFnet(SegmentationModel):
             num_stage=num_stage,
             decoder_channels=decoder_channels, 
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d
+            norm_layer=nn.BatchNorm2d
         )
 
         self.segmentation_head = nn.Sequential(

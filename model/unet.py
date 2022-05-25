@@ -4,8 +4,6 @@ from .model_config import MODEL_CONFIG
 from .decoder.unet import UnetDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
 
 
 class Flatten(nn.Module):
@@ -53,7 +51,7 @@ class Unet(SegmentationModel):
         encoder_channels: List[int] = [32,64,128,256,512],
         decoder_use_batchnorm: bool = True,
         decoder_attention_type: Optional[str] = None,
-        decoder_channels: List[int] = (256,128,64,32),
+        decoder_channels: List[int] = [256,128,64,32],
         upsampling: int = 1,
         classes: int = 1,
         aux_classifier: bool = False,
@@ -74,7 +72,7 @@ class Unet(SegmentationModel):
             decoder_channels=decoder_channels,
             n_blocks=self.encoder_depth - 1,      # the number of decoder block, = encoder_depth - 1 
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d,
+            norm_layer=nn.BatchNorm2d,
             center=False,
             attention_type=decoder_attention_type
         )

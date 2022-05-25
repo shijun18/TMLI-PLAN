@@ -1,3 +1,4 @@
+from pickle import TRUE
 import sys
 sys.path.append('..')
 from model.unet import unet
@@ -8,13 +9,14 @@ from model.bisenetv1 import bisenetv1
 from model.bisenetv2 import bisenetv2
 from model.sfnet import sfnet
 from model.icnet import icnet
+from model.swin_conv import swinconv_base
 
 if __name__ == '__main__':
 
     from torchsummary import summary
     import torch
     import os 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     # unet
     # net = unet('unet',encoder_name='simplenet',in_channels=1,classes=2)
@@ -29,7 +31,7 @@ if __name__ == '__main__':
 
     # res unet
     # net = res_unet('res_unet',encoder_name='simplenet',in_channels=1,classes=2)
-    net = res_unet('res_unet',encoder_name='resnet18',in_channels=1,classes=2,use_center=True,aux_deepvison=True)
+    # net = res_unet('res_unet',encoder_name='resnet18',in_channels=1,classes=2,use_center=True,aux_deepvison=True)
     # net = res_unet('res_unet',encoder_name='swinplusr18',in_channels=1,classes=2)
 
     #deeplabv3+
@@ -54,12 +56,18 @@ if __name__ == '__main__':
 
     #icnet
     # net = icnet('icnet','resnet18',in_channels=1,classes=2)
-    summary(net.cuda(),input_size=(1,512,512),batch_size=1,device='cuda')
+
+    #swinconv
+    net = swinconv_base(in_channels=1,classes=2,aux_deepvision=True)
+
+    summary(net.cuda(),input_size=(1,224,224),batch_size=1,device='cuda')
+    
     
     net = net.cuda()
-    net.train()
+    net.eval()
     input = torch.randn((2,1,512,512)).cuda()
-    output = net(input)
+    with torch.no_grad():
+        output = net(input)
     print(output.size())
     
     from utils import count_params_and_macs

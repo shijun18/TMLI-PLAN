@@ -4,8 +4,6 @@ from .model_config import MODEL_CONFIG
 from .decoder.att_unet import AttUnetDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
 
 
 class Flatten(nn.Module):
@@ -14,10 +12,7 @@ class Flatten(nn.Module):
 
 
 class AttUnet(SegmentationModel):
-    """AttUnet is a fully convolution neural network for image semantic segmentation. Consist of *encoder* 
-    and *decoder* parts connected with *skip connections*. Encoder extract features of different spatial 
-    resolution (skip connections) which are used by decoder to define accurate segmentation mask. Use *concatenation*
-    for fusing decoder blocks with skip connections.
+    """
     Args:
         in_channels: A number of input channels for the model, default is 3 (RGB images)
         encoder_name: Name of the classification model that will be used as an encoder (a.k.a backbone)
@@ -53,7 +48,7 @@ class AttUnet(SegmentationModel):
         encoder_channels: List[int] = [32,64,128,256,512],
         decoder_use_batchnorm: bool = True,
         decoder_attention_type: Optional[str] = None,
-        decoder_channels: List[int] = (256,128,64,32),
+        decoder_channels: List[int] = [256,128,64,32],
         upsampling: int = 1,
         classes: int = 1,
         aux_classifier: bool = False,
@@ -74,7 +69,7 @@ class AttUnet(SegmentationModel):
             decoder_channels=decoder_channels,
             n_blocks=self.encoder_depth - 1,      # the number of decoder block, = encoder_depth - 1 
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d,
+            norm_layer=nn.BatchNorm2d,
             center=False,
             attention_type=decoder_attention_type
         )

@@ -4,8 +4,7 @@ from .model_config import MODEL_CONFIG
 from .decoder.res_unet import ResUnetDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
+
 
 
 class Flatten(nn.Module):
@@ -73,7 +72,7 @@ class ResUnet(SegmentationModel):
             decoder_channels=decoder_channels,
             n_blocks=self.encoder_depth - 1,      # the number of decoder block, = encoder_depth - 1 
             use_batchnorm=decoder_use_batchnorm,
-            norm_layer=BatchNorm2d,
+            norm_layer=nn.BatchNorm2d,
             center=use_center,
             attention_type=decoder_attention_type,
             aux_deepvision=aux_deepvision

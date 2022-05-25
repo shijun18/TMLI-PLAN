@@ -5,8 +5,7 @@ from .model_config import MODEL_CONFIG
 from .decoder.deeplabv3plus import DeepLabV3PlusDecoder
 from .get_encoder import build_encoder
 from .base_model import SegmentationModel
-from .lib import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
+
 
 
 class Flatten(nn.Module):
